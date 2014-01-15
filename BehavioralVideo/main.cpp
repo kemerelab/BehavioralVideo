@@ -22,6 +22,9 @@ int main(int argc, char *argv[])
     timer.moveToThread(&cameraThread);
     cameraInterface.moveToThread(&cameraThread);
 
+    QObject::connect(&cameraInterface, SIGNAL(newFrame(QImage)),w.videoWidget,
+                     SLOT(newFrame(QImage)));
+
     cameraThread.start();
 
     return a.exec();

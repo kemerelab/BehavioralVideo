@@ -25,6 +25,7 @@ private:
     int frameIdx;
     QImage *currentFrame;
     AVFrame *currentFrame_YUV;
+    void *currentFrame_YUV_buf;
     AVFrame *currentFrame_RGB;
     struct SwsContext *sws_ctx;
 };

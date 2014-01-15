@@ -1,4 +1,5 @@
 #include "videowidget.h"
+#include <QDebug>
 
 VideoWidget::VideoWidget(QWidget *parent) :
     QWidget(parent)
@@ -13,10 +14,11 @@ VideoWidget::VideoWidget(QWidget *parent) :
 
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
 
-    currentFrame = QImage(640,480,QImage::Format_RGB888);
+    //currentFrame = QImage(640,480,QImage::Format_RGB888);
 }
 
 void VideoWidget::newFrame(const QImage &image) {
+    qDebug() << "Slot triggered.";
     currentFrame = image;
 }
 

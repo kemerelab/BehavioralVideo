@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     layout = new QGridLayout(ui->centralWidget);
 
-    VideoWidget *videoWidget = new VideoWidget(this);
+    videoWidget = new VideoWidget(this);
     layout->addWidget(videoWidget,1,1);
     ui->centralWidget->setLayout(layout);
 
