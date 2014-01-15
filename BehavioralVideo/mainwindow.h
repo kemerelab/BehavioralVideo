@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QGridLayout>
 #include "videowidget.h"
+#include "videoglwidget.h"
 
 namespace Ui {
 class MainWindow;
@@ -16,7 +17,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    VideoWidget *videoWidget;
+    VideoGLWidget *videoWidget;
+    //VideoWidget *videoWidget;
 
 private:
     Ui::MainWindow *ui;

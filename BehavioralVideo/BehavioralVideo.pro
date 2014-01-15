@@ -17,12 +17,16 @@ macx: LIBS += -L"/opt/local/lib" -lavcodec -lavformat -lswscale -lavutil
 SOURCES += main.cpp\
         mainwindow.cpp \
     camerainterface.cpp \
-    videowidget.cpp
+    videowidget.cpp \
+    videoglwidget.cpp \
+    videowriter.cpp
 
 HEADERS  += mainwindow.h \
     camerainterface.h \
     videowidget.h \
-    ffmpeg.h
+    ffmpeg.h \
+    videoglwidget.h \
+    videowriter.h
 
 FORMS    += mainwindow.ui
 

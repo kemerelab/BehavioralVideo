@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "camerainterface.h"
+#include "videoglwidget.h"
 #include <QApplication>
 #include <QThread>
 #include <QTimer>
@@ -11,13 +12,13 @@ int main(int argc, char *argv[])
     w.show();
 
     QThread cameraThread;
-    //QObject::connect(&cameraThread, SIGNAL(finished()), this, SLOT(quit()));
+    QObject::connect(&w, SIGNAL(destroyed()), &cameraThread, SLOT(quit()));
 
     CameraInterface cameraInterface;
 
     QTimer timer;
     QObject::connect(&timer, SIGNAL(timeout()), &cameraInterface, SLOT(GenerateNextFrame()));
-    timer.start(1000);
+    timer.start(30);
 
     timer.moveToThread(&cameraThread);
     cameraInterface.moveToThread(&cameraThread);
