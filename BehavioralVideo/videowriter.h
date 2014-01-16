@@ -2,6 +2,8 @@
 #define VIDEOWRITER_H
 
 #include <QObject>
+#include <QFile>
+#include "ffmpeg.h"
 
 class VideoWriter : public QObject
 {
@@ -12,7 +14,34 @@ public:
 signals:
 
 public slots:
+    void initialize(QString *filename);
+    void newFrame(QImage image);
+    void beginWriting(void);
+    void endWriting(void);
 
+private:
+    int width, height;
+    int frameRateNumerator, frameRateDenominator;
+    QImage *currentFrame;
+
+    QFile *vFile;
+    QString *vFilename;
+
+    bool currentlyWriting;
+    bool waitingToInitialize;
+
+    //FFMPEG
+    AVOutputFormat *fmt;
+    AVFormatContext *oc;
+    AVCodec *codec;
+    AVStream *video_st;
+    AVFrame *picture;
+    uint8_t *picture_buf;
+    AVFrame *tmp_picture;
+    SwsContext *sws_ctx;
+
+    uint8_t *video_outbuf;
+    int video_outbuf_size;
 };
 
 #endif // VIDEOWRITER_H
