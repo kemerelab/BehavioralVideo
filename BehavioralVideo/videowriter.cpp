@@ -1,7 +1,5 @@
 #include "videowriter.h"
 #include <QDebug>
-#include <QImage>
-#include "ffmpeg.h"
 
 VideoWriter::VideoWriter(QObject *parent) :
     QObject(parent)
@@ -15,30 +13,27 @@ VideoWriter::VideoWriter(QObject *parent) :
     currentlyWriting = false;
 }
 
-void VideoWriter::initialize(QString *filename)
+void VideoWriter::initialize(QString filename)
 {
-    vFilename = new QString(*filename);
+    vFilename = &filename;
     if ((width == -1) || (height == -1)) {
         // Haven't received any frames yet, so we don't know what size they are...
         waitingToInitialize = true;
     }
     else {
-        waitingToInitialize = false;
-        //vFile = new QFile(vFilename);
-        //if (!vFile->open(QIODevice::WriteOnly)) {
-        //    qDebug() << "Error opening file " << vFilename;
-        //}
-        // use FFMPEG avio_open
-
         // Write header here
         // FFMPEG initialization
+        av_register_all(); // initialize libavcodec, and register all codecs and formats
         fmt = av_guess_format("mp4", NULL, NULL);
+        if (!fmt) {
+            qCritical() << "Error initializing fmt.";
+        }
         fmt->video_codec = CODEC_ID_MPEG2VIDEO; // force MPEG video otherwise, default for mp4 is h264
 
         /* allocate the output media context */
         oc = avformat_alloc_context();
         if (!oc)
-            qDebug() << "Memory error";
+            qCritical() << "Error allocating output media context.";
 
         oc->oformat = fmt;
         qsnprintf(oc->filename, sizeof(oc->filename), "%s", vFilename->toLocal8Bit().data());
@@ -73,9 +68,11 @@ void VideoWriter::initialize(QString *filename)
 
         /* set the output parameters (must be done even if no
            parameters). */
-        if (av_set_parameters(oc, NULL) < 0);
+        if (av_set_parameters(oc, NULL) < 0) {
+            qDebug() << "Error setting parameters";
+        }
 
-        //av_dump_format(oc, 0, vFilename, 1);
+        //av_dump_format(oc, 0, vFilename->toLocal8Bit().data(), 1);
 
         /* now that all the parameters are set, we can open the
            video codec and allocate the necessary encode buffers */
@@ -90,12 +87,18 @@ void VideoWriter::initialize(QString *filename)
         }
 
         picture = avcodec_alloc_frame(); // should error check
-        int size = avpicture_get_size(PIX_FMT_RGB24, width, height);
+        if (!picture) {
+            qCritical() << "Error allocating picture frame.";
+        }
+        int size = avpicture_get_size(c->pix_fmt, width, height);
         picture_buf = (uint8_t*)av_malloc(size); // should error check
-        avpicture_fill((AVPicture *)picture, picture_buf, PIX_FMT_RGB24, width, height);
+        if (picture_buf == NULL) {
+            qCritical() << "Error allocating memory for picture buffer.";
+        }
+        avpicture_fill((AVPicture *)picture, picture_buf, c->pix_fmt, width, height);
 
         /* open the output file, if needed */
-        if (url_fopen(oc->pb, vFilename->toLocal8Bit().data(), URL_WRONLY) < 0) {
+        if (avio_open(&oc->pb, vFilename->toLocal8Bit().data(), AVIO_FLAG_WRITE) < 0) {
             qDebug() << "Could not open " << vFilename;
         }
 
@@ -109,7 +112,17 @@ void VideoWriter::initialize(QString *filename)
                                  c->width, c->height, c->pix_fmt,
                                  SWS_FAST_BILINEAR | SWS_CPU_CAPS_MMX2,
                                  NULL, NULL, NULL);
+        if (!sws_ctx) {
+            qCritical() << "Error allocating SWS context.";
+        }
         tmp_picture = avcodec_alloc_frame();
+        if (!tmp_picture) {
+            qCritical() << "Error allocating tmp_picture frame.";
+        }
+
+        waitingToInitialize = false;
+        // Should check here for errors above
+        emit videoInitialized();
     }
 
 
@@ -122,20 +135,16 @@ void VideoWriter::newFrame(QImage image)
         height = image.height();
     }
     if (waitingToInitialize)
-        initialize(vFilename);
+        initialize(*vFilename);
     if (currentlyWriting) {
         currentFrame = &image;
-
-        static struct SwsContext *sws_ctx;
-        int linesize[4];
 
         int i;
 
         AVCodecContext *c = video_st->codec;
-        avpicture_fill(tmp_picture, currentFrame->bits(),
+        avpicture_fill((AVPicture *)tmp_picture, currentFrame->bits(),
                        PIX_FMT_RGB24, c->width, c->height);
-        sws_scale(sws_ctx,
-                  tmp_picture->data, tmp_picture->linesize,
+        sws_scale(sws_ctx, tmp_picture->data, tmp_picture->linesize,
                   0, c->height, picture->data, picture->linesize);
 
         /* encode the image */
@@ -190,7 +199,7 @@ void VideoWriter::endWriting()
             tmp_picture=NULL;
         }
 
-        url_fclose(oc->pb);
+        avio_close(oc->pb);
         /* free the stream and context */
         avformat_free_context(oc);
         oc=NULL;

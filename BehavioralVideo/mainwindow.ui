@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>678</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -35,6 +35,7 @@
      <string>Video</string>
     </property>
     <addaction name="actionDisplay"/>
+    <addaction name="actionOpenVideoFile"/>
     <addaction name="actionRecord"/>
     <addaction name="actionStop"/>
     <addaction name="separator"/>
@@ -58,11 +59,17 @@
    </property>
   </action>
   <action name="actionRecord">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Record</string>
    </property>
   </action>
   <action name="actionStop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Stop</string>
    </property>
@@ -75,6 +82,14 @@
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionOpenVideoFile">
+   <property name="text">
+    <string>Open</string>
    </property>
   </action>
  </widget>

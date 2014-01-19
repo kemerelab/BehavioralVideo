@@ -11,8 +11,8 @@
 VideoGLWidget::VideoGLWidget()
 {
     //currentFrame = ;
-    width = -1;
-    height = -1;
+    v_width = -1;
+    v_height = -1;
 }
 
 void VideoGLWidget::initialize() {
@@ -29,28 +29,30 @@ void VideoGLWidget::initialize() {
 
 void VideoGLWidget::render()
 {
+
+    glViewport(0, 0, width(), height());
+
     glClearColor(0.4f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     glEnable(GL_TEXTURE_2D);
-    if ((height != currentFrame.height()) || (width != currentFrame.width())) {
-        width = currentFrame.width();
-        height = currentFrame.height();
+    if ((v_height != currentFrame.height()) || (v_width != currentFrame.width())) {
+        v_width = currentFrame.width();
+        v_height = currentFrame.height();
         glBindTexture(GL_TEXTURE_2D,m_texture);
         // allocate memory if the image size has changed (or the first time through)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,
-                     height, 0, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, v_width,
+                     v_height, 0, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
     }
     else {
         glActiveTexture(m_texture);
         glBindTexture(GL_TEXTURE_2D,m_texture);
         // don't reallocate memory if the image size hasn't changed
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width,
-                     height, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, v_width,
+                     v_height, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
 
     glColor3f(1,1,1);
     glBindTexture(GL_TEXTURE_2D, m_texture);

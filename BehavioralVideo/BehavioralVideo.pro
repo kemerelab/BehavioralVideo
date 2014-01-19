@@ -14,6 +14,11 @@ TEMPLATE = app
 macx: INCLUDEPATH += /opt/local/include
 macx: LIBS += -L"/opt/local/lib" -lavcodec -lavformat -lswscale -lavutil
 
+unix: INCLUDEPATH += /usr/include
+unix: LIBS += -L"/usr/lib" -lavcodec -lavformat -lswscale -lavutil
+unix: QMAKE_CXXFLAGS += -D__STDC_CONSTANT_MACROS
+
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     camerainterface.cpp \

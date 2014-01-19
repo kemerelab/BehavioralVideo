@@ -14,6 +14,12 @@ int main(int argc, char *argv[])
     QThread cameraThread;
     QObject::connect(&w, SIGNAL(destroyed()), &cameraThread, SLOT(quit()));
 
+    QThread videoWriterThread;
+    QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread, SLOT(quit()));
+    // Should connect this signal to the writing process so that files get closed
+    w.videoWriter->moveToThread(&videoWriterThread);
+    videoWriterThread.start();
+
     CameraInterface cameraInterface;
 
     QTimer timer;
@@ -24,6 +30,8 @@ int main(int argc, char *argv[])
     cameraInterface.moveToThread(&cameraThread);
 
     QObject::connect(&cameraInterface, SIGNAL(newFrame(QImage)),w.videoWidget,
+                     SLOT(newFrame(QImage)));
+    QObject::connect(&cameraInterface, SIGNAL(newFrame(QImage)),w.videoWriter,
                      SLOT(newFrame(QImage)));
 
     cameraThread.start();

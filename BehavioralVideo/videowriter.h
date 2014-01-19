@@ -2,6 +2,7 @@
 #define VIDEOWRITER_H
 
 #include <QObject>
+#include <QImage>
 #include <QFile>
 #include "ffmpeg.h"
 
@@ -12,9 +13,11 @@ public:
     explicit VideoWriter(QObject *parent = 0);
 
 signals:
+    void videoInitialized(void);
+    void writingEnded(void);
 
 public slots:
-    void initialize(QString *filename);
+    void initialize(QString filename);
     void newFrame(QImage image);
     void beginWriting(void);
     void endWriting(void);
