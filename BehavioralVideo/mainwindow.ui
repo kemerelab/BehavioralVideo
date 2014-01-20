@@ -27,7 +27,15 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuOpen_Camera">
+     <property name="title">
+      <string>Open Camera</string>
+     </property>
+     <addaction name="actionFakeVideo"/>
+     <addaction name="actionPointGrey"/>
+    </widget>
     <addaction name="separator"/>
+    <addaction name="menuOpen_Camera"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuVideo">
@@ -90,6 +98,16 @@
   <action name="actionOpenVideoFile">
    <property name="text">
     <string>Open</string>
+   </property>
+  </action>
+  <action name="actionFakeVideo">
+   <property name="text">
+    <string>Fake Video</string>
+   </property>
+  </action>
+  <action name="actionPointGrey">
+   <property name="text">
+    <string>Point Grey</string>
    </property>
   </action>
  </widget>

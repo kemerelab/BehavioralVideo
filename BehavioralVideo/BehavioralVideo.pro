@@ -14,24 +14,28 @@ TEMPLATE = app
 macx: INCLUDEPATH += /opt/local/include
 macx: LIBS += -L"/opt/local/lib" -lavcodec -lavformat -lswscale -lavutil
 
-unix: INCLUDEPATH += /usr/include
-unix: LIBS += -L"/usr/lib" -lavcodec -lavformat -lswscale -lavutil
+unix: INCLUDEPATH += /usr/include /usr/include/flycapture
+unix: LIBS += -L"/usr/lib" -lavcodec -lavformat -lswscale -lavutil -lflycapture
 unix: QMAKE_CXXFLAGS += -D__STDC_CONSTANT_MACROS
 
+QMAKE_CFLAGS += -g -O0
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    camerainterface.cpp \
     videowidget.cpp \
     videoglwidget.cpp \
-    videowriter.cpp
+    videowriter.cpp \
+    fakecamerainterface.cpp \
+    ptgreyinterface.cpp
 
 HEADERS  += mainwindow.h \
-    camerainterface.h \
     videowidget.h \
     ffmpeg.h \
     videoglwidget.h \
-    videowriter.h
+    videowriter.h \
+    fakecamerainterface.h \
+    ptgreyinterface.h \
+    threads.h
 
 FORMS    += mainwindow.ui
 

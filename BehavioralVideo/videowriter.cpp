@@ -177,6 +177,7 @@ void VideoWriter::newFrame(QImage image)
 void VideoWriter::beginWriting()
 {
     currentlyWriting = true;
+    emit writingStarted();
 }
 
 void VideoWriter::endWriting()
@@ -205,6 +206,7 @@ void VideoWriter::endWriting()
         oc=NULL;
 
         // close(info->fdts);
+        emit writingEnded();
     }
 
 }

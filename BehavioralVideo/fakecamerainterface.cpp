@@ -1,7 +1,7 @@
-#include "camerainterface.h"
+#include "fakecamerainterface.h"
 #include <QDebug>
 
-CameraInterface::CameraInterface(QObject *parent) :
+FakeVideoGenerator::FakeVideoGenerator(QObject *parent) :
     QObject(parent)
 {
     width = 640;
@@ -26,13 +26,13 @@ CameraInterface::CameraInterface(QObject *parent) :
     frameIdx = 0;
 }
 
-CameraInterface::~CameraInterface(void) {
+FakeVideoGenerator::~FakeVideoGenerator(void) {
     av_free(currentFrame_YUV->data[0]);
     av_free(currentFrame_YUV);
     av_free(currentFrame_RGB);
 }
 
-void CameraInterface::GenerateNextFrame(void) {
+void FakeVideoGenerator::GenerateNextFrame(void) {
     int x,y;
     int i = frameIdx;
     // Y
@@ -56,4 +56,11 @@ void CameraInterface::GenerateNextFrame(void) {
 
     emit newFrame(*currentFrame);
     frameIdx++;
+}
+
+void FakeVideoGenerator::StartVideo()
+{
+    frameTimer = new QTimer(this);
+    QObject::connect(frameTimer, SIGNAL(timeout()), this, SLOT(GenerateNextFrame()));
+    frameTimer->start(30);
 }

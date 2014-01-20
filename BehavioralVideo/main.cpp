@@ -1,40 +1,29 @@
 #include "mainwindow.h"
-#include "camerainterface.h"
+#include "fakecamerainterface.h"
 #include "videoglwidget.h"
 #include <QApplication>
 #include <QThread>
 #include <QTimer>
+#include <QDebug>
+
+QThread pgThread;
+QThread cameraThread;
+QThread videoWriterThread;
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-
-    QThread cameraThread;
-    QObject::connect(&w, SIGNAL(destroyed()), &cameraThread, SLOT(quit()));
-
-    QThread videoWriterThread;
-    QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread, SLOT(quit()));
-    // Should connect this signal to the writing process so that files get closed
-    w.videoWriter->moveToThread(&videoWriterThread);
-    videoWriterThread.start();
-
-    CameraInterface cameraInterface;
-
-    QTimer timer;
-    QObject::connect(&timer, SIGNAL(timeout()), &cameraInterface, SLOT(GenerateNextFrame()));
-    timer.start(30);
-
-    timer.moveToThread(&cameraThread);
-    cameraInterface.moveToThread(&cameraThread);
-
-    QObject::connect(&cameraInterface, SIGNAL(newFrame(QImage)),w.videoWidget,
-                     SLOT(newFrame(QImage)));
-    QObject::connect(&cameraInterface, SIGNAL(newFrame(QImage)),w.videoWriter,
-                     SLOT(newFrame(QImage)));
+    //qDebug() << "Thread for main: " << QThread::currentThreadId();
 
     cameraThread.start();
+    videoWriterThread.start();
+    pgThread.start();
 
+    MainWindow w;
+    QObject::connect(&w, SIGNAL(destroyed()), &cameraThread, SLOT(quit()));
+    QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread, SLOT(quit()));
+    QObject::connect(&w, SIGNAL(destroyed()), &pgThread, SLOT(quit()));
+
+    w.show();
     return a.exec();
 }

@@ -3,24 +3,27 @@
 
 #include <QObject>
 #include <QImage>
+#include <QTimer>
 #include "ffmpeg.h"
 
-class CameraInterface : public QObject
+class FakeVideoGenerator : public QObject
 {
     Q_OBJECT
 public:
-    explicit CameraInterface(QObject *parent = 0);
-    ~CameraInterface(void);
+    explicit FakeVideoGenerator(QObject *parent = 0);
+    ~FakeVideoGenerator(void);
 
 signals:
     void newFrame(QImage frame);
 
 public slots:
     void GenerateNextFrame(void);
+    void StartVideo(void);
 
 public:
 
 private:
+    QTimer *frameTimer;
     int width, height;
     int frameIdx;
     QImage *currentFrame;

@@ -14,6 +14,7 @@ public:
 
 signals:
     void videoInitialized(void);
+    void writingStarted(void);
     void writingEnded(void);
 
 public slots:
