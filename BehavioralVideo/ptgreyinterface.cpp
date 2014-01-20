@@ -79,17 +79,37 @@ void PtGreyInterface::Initialize()
             error.PrintErrorTrace();
         }
 
+        FlyCapture2::Format7ImageSettings fmt7settings;
+        unsigned int pPktSize;
+        float pPercPktSize;
+
+
         switch (videoMode) {
         case FlyCapture2::VIDEOMODE_640x480Y8:
-        case FlyCapture2::VIDEOMODE_640x480YUV422:
             width = 640;
             height = 480;
+            pixFmt = FlyCapture2::PIXEL_FORMAT_MONO8;
+            break;
+        case FlyCapture2::VIDEOMODE_FORMAT7:
+            error = cam.GetFormat7Configuration(&fmt7settings, &pPktSize, &pPercPktSize);
+            if (error != FlyCapture2::PGRERROR_OK)
+            {
+                error.PrintErrorTrace();
+            }
+            else {
+                width = fmt7settings.width;
+                height = fmt7settings.height;
+                pixFmt = fmt7settings.pixelFormat;
+            }
+
             break;
         default:
             qCritical() << "Unspported video mode set.";
         }
 
+
         currentFrame = new QImage(width, height, QImage::Format_RGB888);
+        /*
         if (!currentFrame)
             qCritical() << "QImage not allocated";
         currentFrame_RGB = avcodec_alloc_frame();
@@ -116,6 +136,7 @@ void PtGreyInterface::Initialize()
         sws_ctx = sws_getContext(width, height, vPixFmt, width, height, PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
         //qDebug() << "Thread for ptgrey initialize: " << QThread::currentThreadId();
 
+        */
         // Start capturing images
         StartCapture();
     }
@@ -124,11 +145,13 @@ void PtGreyInterface::Initialize()
 
 void PtGreyInterface::FrameReceived(FlyCapture2::Image pImage)
 {
-    //qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
-    int ret = avpicture_fill((AVPicture*)currentFrame_RAW,
+    qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
+    memcpy(currentFrame->bits(), pImage.GetData(), pImage.GetDataSize());
+    /*int ret = avpicture_fill((AVPicture*)currentFrame_RAW,
                    (uint8_t*)(pImage.GetData()), vPixFmt, width, height);
     sws_scale(sws_ctx, currentFrame_RAW->data, currentFrame_RAW->linesize, 0, height,
-              currentFrame_RGB->data, currentFrame_RGB->linesize);
+              currentFrame_RGB->data, currentFrame_RGB->linesize);*/
+
 
     emit newFrame(*currentFrame);
 }
@@ -162,7 +185,9 @@ void PtGreyInterface::StopCapture()
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)
 {
     FlyCapture2::Image nImage;
-    FlyCapture2::Error error = nImage.DeepCopy(pImage);
+    //FlyCapture2::Error error = nImage.DeepCopy(pImage);
+    FlyCapture2::Error error;
+    pImage->Convert(FlyCapture2::PIXEL_FORMAT_RGB8, &nImage);
     if (error != FlyCapture2::PGRERROR_OK)
     {
         error.PrintErrorTrace();
@@ -172,7 +197,7 @@ void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)
     QMetaObject::invokeMethod(pgInt, "FrameReceived", Qt::QueuedConnection,
                               Q_ARG(FlyCapture2::Image, nImage));
 
-    //qDebug() << "Thread for callback: " << QThread::currentThreadId();
+    qDebug() << "Thread for callback: " << QThread::currentThreadId();
     return;
 }
 

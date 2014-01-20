@@ -1,5 +1,6 @@
 #include "videowriter.h"
 #include <QDebug>
+#include <QThread>
 
 VideoWriter::VideoWriter(QObject *parent) :
     QObject(parent)
@@ -21,6 +22,7 @@ void VideoWriter::initialize(QString filename)
         waitingToInitialize = true;
     }
     else {
+        //qDebug() << "Thread for initialize: " << QThread::currentThreadId();
         // Write header here
         // FFMPEG initialization
         av_register_all(); // initialize libavcodec, and register all codecs and formats
@@ -34,6 +36,8 @@ void VideoWriter::initialize(QString filename)
         oc = avformat_alloc_context();
         if (!oc)
             qCritical() << "Error allocating output media context.";
+
+        qDebug() << "Output context allocated";
 
         oc->oformat = fmt;
         qsnprintf(oc->filename, sizeof(oc->filename), "%s", vFilename->toLocal8Bit().data());
@@ -115,7 +119,8 @@ void VideoWriter::initialize(QString filename)
         if (!sws_ctx) {
             qCritical() << "Error allocating SWS context.";
         }
-        tmp_picture = avcodec_alloc_frame();
+        tmp_picture = avcodec_alloc_frame();        qDebug() << "Video Initialized emitted";
+
         if (!tmp_picture) {
             qCritical() << "Error allocating tmp_picture frame.";
         }
@@ -123,6 +128,7 @@ void VideoWriter::initialize(QString filename)
         waitingToInitialize = false;
         // Should check here for errors above
         emit videoInitialized();
+
     }
 
 

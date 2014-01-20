@@ -32,7 +32,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpenVideoFile, SIGNAL(triggered()), this, SLOT(openVideoFile()));
     connect(this, SIGNAL(initializeVideo(QString)), videoWriter, SLOT(initialize(QString)));
     connect(videoWriter, SIGNAL(videoInitialized()), this, SLOT(enableVideoSaving()));
+//    connect(ui->actionRecord, SIGNAL(triggered()), videoWriter, SLOT(beginWriting()));
     connect(ui->actionRecord, SIGNAL(triggered()), this, SLOT(prepareToSaveVideo()));
+
     connect(ui->actionStop, SIGNAL(triggered()), videoWriter, SLOT(endWriting()));
     connect(videoWriter, SIGNAL(writingStarted()), this, SLOT(videoSavingStarted()));
     connect(videoWriter, SIGNAL(writingEnded()), this, SLOT(disableVideoSaving()));

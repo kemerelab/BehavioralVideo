@@ -32,6 +32,7 @@ public:
 
 private:
     int width, height;
+    FlyCapture2::PixelFormat pixFmt;
     QImage *currentFrame;
     FlyCapture2::Camera cam;
     FlyCapture2::Image *pImage; //PtGrey format
