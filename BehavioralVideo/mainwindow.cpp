@@ -83,10 +83,12 @@ void MainWindow::openVideoFile()
     QString defaultFilename = QDir::currentPath() + "/BehaviorVideo_" + curtime.toString("MMddyyyy_hhmmss") + ".mp4";
 
     while (!fileSelected) {
-        filename = QFileDialog::getSaveFileName(this,
-                                                        tr("Select Video Filename"), defaultFilename, tr("Video File (*.mp4)"), 0,
-                                                        QFileDialog::DontUseNativeDialog);
+        filename = QFileDialog::getSaveFileName(this, tr("Select Video Filename"),
+                                                defaultFilename, tr("Video File (*.mp4)"), 0);
+                                                      //  QFileDialog::DontUseNativeDialog);
 
+        if (filename == NULL)
+            break;
         if (QFile(filename).exists()) {
             QMessageBox msgBox;
             msgBox.setText("File exists.");
