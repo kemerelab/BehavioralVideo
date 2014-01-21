@@ -32,15 +32,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpenVideoFile, SIGNAL(triggered()), this, SLOT(openVideoFile()));
     connect(this, SIGNAL(initializeVideo(QString)), videoWriter, SLOT(initialize(QString)));
     connect(videoWriter, SIGNAL(videoInitialized()), this, SLOT(enableVideoSaving()));
-//    connect(ui->actionRecord, SIGNAL(triggered()), videoWriter, SLOT(beginWriting()));
-    connect(ui->actionRecord, SIGNAL(triggered()), this, SLOT(prepareToSaveVideo()));
+    connect(ui->actionRecord, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
 
-    connect(ui->actionStop, SIGNAL(triggered()), videoWriter, SLOT(endWriting()));
+    connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
+    //connect(ui->actionStop, SIGNAL(triggered()), videoWriter, SLOT(endWriting()));
+
     connect(videoWriter, SIGNAL(writingStarted()), this, SLOT(videoSavingStarted()));
     connect(videoWriter, SIGNAL(writingEnded()), this, SLOT(disableVideoSaving()));
     connect(ui->actionPointGrey, SIGNAL(triggered()), this, SLOT(openPtGreyCamera()));
     connect(ui->actionFakeVideo, SIGNAL(triggered()), this, SLOT(openFakeVideo()));
 
+    intermediateSavingState = NOT_SAVING;
     //qDebug() << "Thread for mainwindow: " << QThread::currentThreadId();
 
 }
@@ -55,10 +57,15 @@ void MainWindow::openPtGreyCamera()
     pgCamera = new PtGreyInterface();
     pgCamera->moveToThread(&pgThread);
     ui->menuOpen_Camera->setDisabled(true);
+    QObject::connect(pgCamera, SIGNAL(capturingEnded()), this, SLOT(handleVideoSaving()));
     QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget,
                      SLOT(newFrame(QImage)));
     QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWriter,
                      SLOT(newFrame(QImage)));
+    QObject::connect(videoWriter, SIGNAL(writingStarted()),pgCamera,
+                     SLOT(StartCaptureWithStrobe()));
+    QObject::connect(videoWriter, SIGNAL(writingEnded()),pgCamera,
+                     SLOT(StartCaptureNoStrobe()));
     QMetaObject::invokeMethod(pgCamera, "Initialize", Qt::QueuedConnection);
 }
 
@@ -115,11 +122,29 @@ void MainWindow::enableVideoSaving()
     ui->actionOpenVideoFile->setDisabled(true);
 }
 
-void MainWindow::prepareToSaveVideo()
+void MainWindow::handleVideoSaving()
 {
     // This is where we want to stop the camera, and then restart it
     // with strobes once video saving is started (below)
-    QMetaObject::invokeMethod(videoWriter, "beginWriting", Qt::QueuedConnection);
+    switch (intermediateSavingState) {
+    case NOT_SAVING: // should be triggered by menu
+        QMetaObject::invokeMethod(pgCamera, "StopCapture", Qt::QueuedConnection);
+        intermediateSavingState = STARTING_SAVING;
+        break;
+    case STARTING_SAVING: // should be triggered by captureEnded
+        QMetaObject::invokeMethod(videoWriter, "beginWriting", Qt::QueuedConnection);
+        intermediateSavingState = CURRENTLY_SAVING;
+        break;
+    case CURRENTLY_SAVING: // should be triggered by menu
+        QMetaObject::invokeMethod(pgCamera, "StopCapture", Qt::QueuedConnection);
+        intermediateSavingState = ENDING_SAVING;
+        break;
+    case ENDING_SAVING: // should be triggered by captureEnded
+        QMetaObject::invokeMethod(videoWriter, "endWriting", Qt::QueuedConnection);
+        intermediateSavingState = NOT_SAVING;
+        break;
+    };
+
 
 }
 

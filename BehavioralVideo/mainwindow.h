@@ -29,7 +29,7 @@ public:
 public slots:
     void openVideoFile();
     void enableVideoSaving();
-    void prepareToSaveVideo();
+    void handleVideoSaving();
     void videoSavingStarted();
     void disableVideoSaving();
     void openPtGreyCamera();
@@ -41,6 +41,15 @@ signals:
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
+
+
+    enum IntermediateSavingState {
+        NOT_SAVING,
+        STARTING_SAVING,
+        CURRENTLY_SAVING,
+        ENDING_SAVING
+    };
+    IntermediateSavingState intermediateSavingState;
 };
 
 #endif // MAINWINDOW_H

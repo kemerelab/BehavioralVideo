@@ -128,7 +128,6 @@ void VideoWriter::initialize(QString filename)
         waitingToInitialize = false;
         // Should check here for errors above
         emit videoInitialized();
-
     }
 
 

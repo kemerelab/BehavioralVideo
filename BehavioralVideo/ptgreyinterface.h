@@ -20,12 +20,16 @@ public:
 
 signals:
     void newFrame(QImage frame);
+    void capturingStarted(void);
+    void capturingEnded(void);
 
 public slots:
     void Initialize(void);
     //void FrameReceived(void);
     void FrameReceived(FlyCapture2::Image pImage);
-    void StartCapture(void);
+    void StartCapture(bool enableStrobe);
+    void StartCaptureNoStrobe(void);
+    void StartCaptureWithStrobe(void);
     void StopCapture(void);
 
 public:
@@ -39,12 +43,15 @@ private:
     FlyCapture2::VideoMode videoMode;
     FlyCapture2::FrameRate frameRate;
     bool isCapturing;
+    bool strobeEnabled;
     PixelFormat vPixFmt;
 
     AVFrame *currentFrame_RAW;
     void *currentFrame_RAW_buf;
     AVFrame *currentFrame_RGB;
     struct SwsContext *sws_ctx;
+
+
 signals:
 
 public slots:

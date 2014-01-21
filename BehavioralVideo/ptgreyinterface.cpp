@@ -126,7 +126,7 @@ void PtGreyInterface::Initialize()
         //qDebug() << "Thread for ptgrey initialize: " << QThread::currentThreadId();
 
         // Start capturing images
-        StartCapture();
+        StartCapture(false); // No strobe initially.
     }
 
 }
@@ -146,9 +146,27 @@ void PtGreyInterface::FrameReceived(FlyCapture2::Image pImage)
 
 }
 
-void PtGreyInterface::StartCapture()
+void PtGreyInterface::StartCapture(bool enableStrobe)
 {
     qDebug() << "Starting capture...";
+    strobeEnabled = enableStrobe;
+    if (strobeEnabled) {
+        qDebug() << "Enabling strobe";
+        FlyCapture2::StrobeControl strobeControl;
+        strobeControl.source = 1; // GPIO 1
+        strobeControl.onOff = true;
+        strobeControl.duration = 5.0;
+        strobeControl.polarity = 1.0;
+        cam.SetStrobe(&strobeControl, false);
+    }
+    else {
+        FlyCapture2::StrobeControl strobeControl;
+        strobeControl.source = 1; // GPIO 1
+        strobeControl.onOff = false;
+        strobeControl.duration = 0.0;
+        strobeControl.polarity = 1;
+        cam.SetStrobe(&strobeControl, false);
+    }
     FlyCapture2::Error error = cam.StartCapture(OnImageGrabbed, this);
     if (error != FlyCapture2::PGRERROR_OK)
     {
@@ -156,8 +174,20 @@ void PtGreyInterface::StartCapture()
     }
     else {
         isCapturing = true;
+        emit capturingStarted();
     }
 }
+
+void PtGreyInterface::StartCaptureNoStrobe()
+{
+    StartCapture(false);
+}
+
+void PtGreyInterface::StartCaptureWithStrobe()
+{
+    StartCapture(true);
+}
+
 
 void PtGreyInterface::StopCapture()
 {
@@ -169,6 +199,7 @@ void PtGreyInterface::StopCapture()
     }
     else {
         isCapturing = false;
+        emit capturingEnded();
     }
 }
 
