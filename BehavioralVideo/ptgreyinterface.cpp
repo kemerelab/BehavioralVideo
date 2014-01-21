@@ -89,6 +89,7 @@ void PtGreyInterface::Initialize()
             width = 640;
             height = 480;
             pixFmt = FlyCapture2::PIXEL_FORMAT_MONO8;
+            vPixFmt = PIX_FMT_GRAY8;
             break;
         case FlyCapture2::VIDEOMODE_FORMAT7:
             error = cam.GetFormat7Configuration(&fmt7settings, &pPktSize, &pPercPktSize);
@@ -100,43 +101,30 @@ void PtGreyInterface::Initialize()
                 width = fmt7settings.width;
                 height = fmt7settings.height;
                 pixFmt = fmt7settings.pixelFormat;
+                vPixFmt = PIX_FMT_UYVY422; //This is incorrect - should be bayer
             }
 
             break;
         default:
             qCritical() << "Unspported video mode set.";
         }
-
-
         currentFrame = new QImage(width, height, QImage::Format_RGB888);
-        /*
         if (!currentFrame)
             qCritical() << "QImage not allocated";
-        currentFrame_RGB = avcodec_alloc_frame();
-        if (!currentFrame_RAW)
-            qDebug() << "Could not allocate frame";
-        avpicture_fill((AVPicture*)currentFrame_RGB, currentFrame->bits(), PIX_FMT_RGB24, width, height);
-
-        switch (videoMode) {
-        case FlyCapture2::VIDEOMODE_640x480Y8:
-            vPixFmt = PIX_FMT_GRAY8;
-            //vPixFmt = PIX_FMT_YUV420P;
-            break;
-        case FlyCapture2::VIDEOMODE_640x480YUV422:
-            vPixFmt = PIX_FMT_UYVY422;
-            break;
-        default:
-            qCritical() << "Bad formats";
-        }
-
+        /*
         currentFrame_RAW = avcodec_alloc_frame();
         if (!currentFrame_RAW)
             qCritical() << "Could not allocate frame";
 
         sws_ctx = sws_getContext(width, height, vPixFmt, width, height, PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
+
+        currentFrame_RGB = avcodec_alloc_frame();
+        if (!currentFrame_RGB)
+            qDebug() << "Could not allocate frame";
+        avpicture_fill((AVPicture*)currentFrame_RGB, currentFrame->bits(), PIX_FMT_RGB24, width, height);
+*/
         //qDebug() << "Thread for ptgrey initialize: " << QThread::currentThreadId();
 
-        */
         // Start capturing images
         StartCapture();
     }
@@ -145,15 +133,17 @@ void PtGreyInterface::Initialize()
 
 void PtGreyInterface::FrameReceived(FlyCapture2::Image pImage)
 {
-    qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
     memcpy(currentFrame->bits(), pImage.GetData(), pImage.GetDataSize());
-    /*int ret = avpicture_fill((AVPicture*)currentFrame_RAW,
+    /*
+    int ret = avpicture_fill((AVPicture*)currentFrame_RAW,
                    (uint8_t*)(pImage.GetData()), vPixFmt, width, height);
     sws_scale(sws_ctx, currentFrame_RAW->data, currentFrame_RAW->linesize, 0, height,
-              currentFrame_RGB->data, currentFrame_RGB->linesize);*/
-
+              currentFrame_RGB->data, currentFrame_RGB->linesize);
+              */
 
     emit newFrame(*currentFrame);
+    //qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
+
 }
 
 void PtGreyInterface::StartCapture()
@@ -187,17 +177,21 @@ void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)
     FlyCapture2::Image nImage;
     //FlyCapture2::Error error = nImage.DeepCopy(pImage);
     FlyCapture2::Error error;
-    pImage->Convert(FlyCapture2::PIXEL_FORMAT_RGB8, &nImage);
+    //pImage->Convert(FlyCapture2::PIXEL_FORMAT_RGB8, &nImage);
+    FlyCapture2::Image::SetDefaultColorProcessing(FlyCapture2::NEAREST_NEIGHBOR);
+    FlyCapture2::Image::SetDefaultOutputFormat(FlyCapture2::PIXEL_FORMAT_RGB);
+    pImage->Convert(&nImage);
     if (error != FlyCapture2::PGRERROR_OK)
     {
-        error.PrintErrorTrace();
+        //error.PrintErrorTrace();
+        //qDebug() << "Error in convert" << error.GetDescription();
     }
     PtGreyInterface *pgInt = (PtGreyInterface *) pCallbackData;
-    qRegisterMetaType<FlyCapture2::Image>("FlyCapture2::Image*");
+    qRegisterMetaType<FlyCapture2::Image>("FlyCapture2::Image");
     QMetaObject::invokeMethod(pgInt, "FrameReceived", Qt::QueuedConnection,
                               Q_ARG(FlyCapture2::Image, nImage));
 
-    qDebug() << "Thread for callback: " << QThread::currentThreadId();
+    //qDebug() << "Thread for callback: " << QThread::currentThreadId();
     return;
 }
 

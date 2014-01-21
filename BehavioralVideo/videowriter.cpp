@@ -114,7 +114,7 @@ void VideoWriter::initialize(QString filename)
         // Set up frame conversion from RGB24 to YUV420P
         sws_ctx = sws_getContext(c->width, c->height, PIX_FMT_RGB24,
                                  c->width, c->height, c->pix_fmt,
-                                 SWS_FAST_BILINEAR | SWS_CPU_CAPS_MMX2,
+                                 SWS_FAST_BILINEAR | SWS_CPU_CAPS_SSE2 | SWS_CPU_CAPS_MMX2,
                                  NULL, NULL, NULL);
         if (!sws_ctx) {
             qCritical() << "Error allocating SWS context.";

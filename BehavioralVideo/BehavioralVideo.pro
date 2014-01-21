@@ -18,7 +18,7 @@ unix: INCLUDEPATH += /usr/include /usr/include/flycapture
 unix: LIBS += -L"/usr/lib" -lavcodec -lavformat -lswscale -lavutil -lflycapture
 unix: QMAKE_CXXFLAGS += -D__STDC_CONSTANT_MACROS
 
-QMAKE_CFLAGS += -g -O0
+QMAKE_CFLAGS += -g -O3
 
 SOURCES += main.cpp\
         mainwindow.cpp \

@@ -69,6 +69,7 @@ void VideoGLWidget::render()
 
 void VideoGLWidget::newFrame(QImage frame) {
     currentFrame = frame;
+    renderLater();
 }
 
 OpenGLWindow::OpenGLWindow(QWindow *parent) :
@@ -90,6 +91,11 @@ OpenGLWindow::~OpenGLWindow()
 void OpenGLWindow::render(QPainter *painter)
 {
     Q_UNUSED(painter);
+}
+
+qreal OpenGLWindow::aspectRatio()
+{
+    return 1.0;
 }
 
 void OpenGLWindow::initialize()

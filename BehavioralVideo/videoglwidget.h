@@ -21,6 +21,7 @@ public:
     virtual void initialize();
 
     void setAnimating(bool animating);
+    qreal aspectRatio();
 
 signals:
 

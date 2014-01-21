@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QWidget *container = QWidget::createWindowContainer(videoWidget);
     layout->addWidget(container,1,1);
     ui->centralWidget->setLayout(layout);
-    videoWidget->setAnimating(true);
+    //videoWidget->setAnimating(true);
 
     videoWriter = new VideoWriter();
     // Should connect this signal to the writing process so that files get closed
