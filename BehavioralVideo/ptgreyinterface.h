@@ -46,6 +46,10 @@ private:
     bool strobeEnabled;
     PixelFormat vPixFmt;
 
+    FlyCapture2::StrobeControl strobeControl;
+    FlyCapture2::TriggerMode triggerMode;
+    int lastGPIOPinState;
+
     AVFrame *currentFrame_RAW;
     void *currentFrame_RAW_buf;
     AVFrame *currentFrame_RGB;

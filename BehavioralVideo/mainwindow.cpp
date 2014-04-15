@@ -62,6 +62,9 @@ void MainWindow::openPtGreyCamera()
                      SLOT(newFrame(QImage)));
     QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWriter,
                      SLOT(newFrame(QImage)));
+    frameCount = 0;
+    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),this,
+                     SLOT(countFrames(QImage)));
     QObject::connect(videoWriter, SIGNAL(writingStarted()),pgCamera,
                      SLOT(StartCaptureWithStrobe()));
     QObject::connect(videoWriter, SIGNAL(writingEnded()),pgCamera,
@@ -79,6 +82,16 @@ void MainWindow::openFakeVideo()
     QObject::connect(fakeCamera, SIGNAL(newFrame(QImage)),videoWriter,
                      SLOT(newFrame(QImage)));
     QMetaObject::invokeMethod(fakeCamera, "StartVideo", Qt::QueuedConnection);
+}
+
+void MainWindow::countFrames(QImage)
+{
+    if (intermediateSavingState == CURRENTLY_SAVING) {
+        frameCount++;
+        if (frameCount >= 4 ) {
+            ui->actionStop->trigger();
+        }
+    }
 }
 
 void MainWindow::openVideoFile()

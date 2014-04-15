@@ -59,9 +59,9 @@ void VideoWriter::initialize(QString filename)
         c->time_base = (AVRational){frameRateNumerator, frameRateDenominator}; // frames per second
 
         // Stuff to try to force high quality encoding
-        c->gop_size = 1; /* emit one intra frame every n frames at most */
-        c->bit_rate = 6000000;
-        c->qmax = 2; // low is better, so frame-by-frame force high quality
+        //c->gop_size = 1; /* emit one intra frame every n frames at most */
+        //c->bit_rate = 6000000;
+        c->qmax = 6; // low is better, so frame-by-frame force high quality
         /* just for testing, we also get rid of B frames */
         if (c->codec_id == CODEC_ID_MPEG2VIDEO) {
             c->max_b_frames = 0;

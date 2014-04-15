@@ -47,6 +47,7 @@
     <addaction name="actionStop"/>
     <addaction name="separator"/>
     <addaction name="actionConfigure"/>
+    <addaction name="actionTimedCapture"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
@@ -107,6 +108,11 @@
   <action name="actionPointGrey">
    <property name="text">
     <string>Point Grey</string>
+   </property>
+  </action>
+  <action name="actionTimedCapture">
+   <property name="text">
+    <string>TimedCapture</string>
    </property>
   </action>
  </widget>

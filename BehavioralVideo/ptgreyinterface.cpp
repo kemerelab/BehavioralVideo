@@ -56,6 +56,7 @@ void PtGreyInterface::Initialize()
 
         // Set the grab mode to buffering
         config.grabMode = FlyCapture2::BUFFER_FRAMES;
+        config.highPerformanceRetrieveBuffer = true;
 
         // Set the camera configuration
         error = cam.SetConfiguration( &config );
@@ -125,6 +126,29 @@ void PtGreyInterface::Initialize()
 */
         //qDebug() << "Thread for ptgrey initialize: " << QThread::currentThreadId();
 
+        FlyCapture2::EmbeddedImageInfo embeddedInfo;
+        embeddedInfo.GPIOPinState.onOff = true;
+        cam.SetEmbeddedImageInfo(&embeddedInfo);
+
+        strobeControl.duration = 5.0;
+        strobeControl.polarity = 1.0;
+        strobeControl.source = 1; // GPIO 1
+        strobeControl.onOff = false;
+        cam.SetStrobe(&strobeControl, false);
+
+        strobeControl.duration = 5.0;
+        strobeControl.polarity = 0;
+        strobeControl.source = 2; // GPIO 2
+        strobeControl.onOff = true;
+        cam.SetStrobe(&strobeControl, false);
+
+        triggerMode.source = 0; // GPIO 0
+        triggerMode.mode = 0;
+        triggerMode.onOff = true; // async
+        cam.SetTriggerMode(&triggerMode, false);
+
+        lastGPIOPinState = 0;
+
         // Start capturing images
         StartCapture(false); // No strobe initially.
     }
@@ -140,8 +164,17 @@ void PtGreyInterface::FrameReceived(FlyCapture2::Image pImage)
     sws_scale(sws_ctx, currentFrame_RAW->data, currentFrame_RAW->linesize, 0, height,
               currentFrame_RGB->data, currentFrame_RGB->linesize);
               */
+    static FlyCapture2::ImageMetadata imageMetadata;
+    imageMetadata = pImage.GetMetadata();
+
+    if (lastGPIOPinState != imageMetadata.embeddedGPIOPinState) {
+        qDebug() << "Changed GPIO value. Last: " << lastGPIOPinState << " Current: " << imageMetadata.embeddedGPIOPinState;
+        lastGPIOPinState = imageMetadata.embeddedGPIOPinState;
+    }
 
     emit newFrame(*currentFrame);
+    if (strobeEnabled)
+        qDebug() << "Got a frame";
     //qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
 
 }
@@ -150,23 +183,39 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
 {
     qDebug() << "Starting capture...";
     strobeEnabled = enableStrobe;
+
     if (strobeEnabled) {
-        qDebug() << "Enabling strobe";
-        FlyCapture2::StrobeControl strobeControl;
-        strobeControl.source = 1; // GPIO 1
+        qDebug() << "Starting capture... [switching to async]";
+        triggerMode.onOff = true;
+        FlyCapture2::Error error = cam.SetTriggerMode(&triggerMode,false);
+        if (error != FlyCapture2::PGRERROR_OK)
+        {
+            error.PrintErrorTrace();
+        }
+        qDebug() << "Enabling GPIO 1 strobe and switching GPIO 2 to high";
         strobeControl.onOff = true;
-        strobeControl.duration = 5.0;
-        strobeControl.polarity = 1.0;
+        strobeControl.polarity = 1;
+        strobeControl.source = 2;
         cam.SetStrobe(&strobeControl, false);
-    }
-    else {
-        FlyCapture2::StrobeControl strobeControl;
-        strobeControl.source = 1; // GPIO 1
-        strobeControl.onOff = false;
-        strobeControl.duration = 0.0;
+        strobeControl.onOff = true;
+        strobeControl.source = 1;
         strobeControl.polarity = 1;
         cam.SetStrobe(&strobeControl, false);
+        //cam.WriteRegister(0x1120,0x8000);
     }
+    else {
+        qDebug() << "Setting GPIO 2 to low polarity and disabling GPIO 1";
+        strobeControl.onOff = false;
+        strobeControl.source = 1;
+        strobeControl.polarity = 1;
+        cam.SetStrobe(&strobeControl, false);
+        strobeControl.onOff = true;
+        strobeControl.polarity = 0;
+        strobeControl.source = 2;
+        cam.SetStrobe(&strobeControl, false);
+        //cam.WriteRegister(0x1120,0x4000);
+    }
+
     FlyCapture2::Error error = cam.StartCapture(OnImageGrabbed, this);
     if (error != FlyCapture2::PGRERROR_OK)
     {
@@ -175,6 +224,15 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
     else {
         isCapturing = true;
         emit capturingStarted();
+        // this has to go to the image acquisition function where the strobes can be seen
+    }
+
+    qDebug() << "Starting capture... [switching to sync]";
+    triggerMode.onOff = false;
+    error = cam.SetTriggerMode(&triggerMode,false);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
     }
 }
 
@@ -191,8 +249,28 @@ void PtGreyInterface::StartCaptureWithStrobe()
 
 void PtGreyInterface::StopCapture()
 {
-    qDebug() << "Stopping capture...";
-    FlyCapture2::Error error = cam.StopCapture();
+    qDebug() << "Stopping capture... [switching to async]";
+    triggerMode.onOff = true;
+    FlyCapture2::Error error = cam.SetTriggerMode(&triggerMode,false);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+    }
+
+    if (strobeEnabled) {
+        qDebug() << "Setting GPIO 2 to low polarity and disabling GPIO 1";
+        strobeControl.source = 1;
+        strobeControl.polarity = 1;
+        strobeControl.onOff = false;
+        cam.SetStrobe(&strobeControl, false);
+        strobeControl.source = 2;
+        strobeControl.onOff = true;
+        strobeControl.polarity = 0;
+        cam.SetStrobe(&strobeControl, false);
+    }
+
+    qDebug() << "Stopping capture... [stopping capture]";
+    error = cam.StopCapture();
     if (error != FlyCapture2::PGRERROR_OK)
     {
         error.PrintErrorTrace();
@@ -208,6 +286,17 @@ void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)
     FlyCapture2::Image nImage;
     //FlyCapture2::Error error = nImage.DeepCopy(pImage);
     FlyCapture2::Error error;
+
+    static FlyCapture2::ImageMetadata im;
+    static unsigned int last = 0;
+    im = pImage->GetMetadata();
+
+    //if (last != im.embeddedGPIOPinState) {
+        qDebug() << "[]GPIO value. Last: " << hex << last << " Current: " << hex << im.embeddedGPIOPinState;
+        last = im.embeddedGPIOPinState;
+    //}
+
+
     //pImage->Convert(FlyCapture2::PIXEL_FORMAT_RGB8, &nImage);
     FlyCapture2::Image::SetDefaultColorProcessing(FlyCapture2::NEAREST_NEIGHBOR);
     FlyCapture2::Image::SetDefaultOutputFormat(FlyCapture2::PIXEL_FORMAT_RGB);

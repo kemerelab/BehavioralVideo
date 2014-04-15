@@ -34,6 +34,7 @@ public slots:
     void disableVideoSaving();
     void openPtGreyCamera();
     void openFakeVideo();
+    void countFrames(QImage);
 
 signals:
     void initializeVideo(QString filename);
@@ -41,6 +42,7 @@ signals:
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
+    int frameCount;
 
 
     enum IntermediateSavingState {
