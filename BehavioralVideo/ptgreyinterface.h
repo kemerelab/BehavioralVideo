@@ -9,7 +9,13 @@
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData);
 
-Q_DECLARE_METATYPE(FlyCapture2::Image);
+struct ImageWithMetadata {
+    FlyCapture2::Image flyCapImage;
+    unsigned int flag;
+};
+
+//Q_DECLARE_METATYPE(FlyCapture2::Image);
+Q_DECLARE_METATYPE(ImageWithMetadata);
 
 class PtGreyInterface : public QObject
 {
@@ -26,7 +32,8 @@ signals:
 public slots:
     void Initialize(void);
     //void FrameReceived(void);
-    void FrameReceived(FlyCapture2::Image pImage);
+    //void FrameReceived(FlyCapture2::Image pImage);
+    void FrameReceived(ImageWithMetadata img);
     void StartCapture(bool enableStrobe);
     void StartCaptureNoStrobe(void);
     void StartCaptureWithStrobe(void);
@@ -46,7 +53,7 @@ private:
     bool strobeEnabled;
     PixelFormat vPixFmt;
 
-    FlyCapture2::StrobeControl strobeControl;
+    FlyCapture2::StrobeControl strobeControl, edgeStrobeControl;
     FlyCapture2::TriggerMode triggerMode;
     int lastGPIOPinState;
 
