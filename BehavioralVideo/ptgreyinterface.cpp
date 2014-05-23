@@ -133,7 +133,7 @@ void PtGreyInterface::Initialize()
 
         strobeControl.duration = 15.0;
         strobeControl.polarity = 1.0;
-        strobeControl.source = 1; // GPIO 1
+        strobeControl.source = 3; // GPIO 1
         strobeControl.onOff = false;
         strobeControl.delay = 0;
         cam.SetStrobe(&strobeControl, false);
@@ -144,9 +144,9 @@ void PtGreyInterface::Initialize()
         edgeStrobeControl.onOff = true;
         cam.SetStrobe(&edgeStrobeControl, false);
 
-        triggerMode.source = 0; // GPIO 0
+        triggerMode.source = 1; // GPIO 0
         triggerMode.mode = 0;
-        triggerMode.onOff = true; // start in async mode
+        triggerMode.onOff = false; // start in async mode
         cam.SetTriggerMode(&triggerMode, false);
 
 
@@ -157,7 +157,7 @@ void PtGreyInterface::Initialize()
         {
             error.PrintErrorTrace();
             qDebug() << "Missed error?";
-        }
+        }file://
         else {
             unsigned int regVal;
             qDebug() << "Trigger a shot";
@@ -239,9 +239,10 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
 
     if (strobeEnabled) {
         qDebug() << "Starting capture... [switching to async]";
-        cam.WriteRegister(0x0830,0x82100000); // trigger ON
-        //triggerMode.onOff = true;
-        //error = cam.SetTriggerMode(&triggerMode,false);
+        //cam.WriteRegister(0x0830,0x82100000); // trigger ON
+
+        triggerMode.onOff = true;
+        error = cam.SetTriggerMode(&triggerMode,false);
         //if (error != FlyCapture2::PGRERROR_OK)
         //{
         //    error.PrintErrorTrace();
