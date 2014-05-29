@@ -49,6 +49,8 @@ private:
     FlyCapture2::Image *pImage; //PtGrey format
     FlyCapture2::VideoMode videoMode;
     FlyCapture2::FrameRate frameRate;
+
+
     bool isCapturing;
     bool strobeEnabled;
     PixelFormat vPixFmt;

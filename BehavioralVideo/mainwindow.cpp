@@ -88,7 +88,7 @@ void MainWindow::countFrames(QImage)
 {
     if (intermediateSavingState == CURRENTLY_SAVING) {
         frameCount++;
-        if (frameCount >= 4 ) {
+        if (frameCount >= 30 ) {
             ui->actionStop->trigger();
         }
     }
@@ -104,8 +104,8 @@ void MainWindow::openVideoFile()
 
     while (!fileSelected) {
         filename = QFileDialog::getSaveFileName(this, tr("Select Video Filename"),
-                                                defaultFilename, tr("Video File (*.mp4)"), 0);
-                                                      //  QFileDialog::DontUseNativeDialog);
+                                                defaultFilename, tr("Video File (*.mp4)"), 0,
+                                                        QFileDialog::DontUseNativeDialog);
 
         if (filename == NULL)
             break;

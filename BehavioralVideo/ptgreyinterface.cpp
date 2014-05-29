@@ -22,6 +22,8 @@ void PtGreyInterface::Initialize()
 
     qDebug() << "Number of cameras detected: " << numCameras;
 
+
+
     // Pick camera (change from first)
     if (numCameras >= 1) {
         FlyCapture2::PGRGuid guid;
@@ -66,6 +68,8 @@ void PtGreyInterface::Initialize()
             error.PrintErrorTrace();
         }
 
+
+
         qDebug() <<
             "\n*** CAMERA INFORMATION ***\n" <<
             "Serial number -" << camInfo.serialNumber <<
@@ -90,8 +94,17 @@ void PtGreyInterface::Initialize()
         case FlyCapture2::VIDEOMODE_640x480Y8:
             width = 640;
             height = 480;
-            pixFmt = FlyCapture2::PIXEL_FORMAT_MONO8;
-            vPixFmt = PIX_FMT_GRAY8;
+            //pixFmt = FlyCapture2::PIXEL_FORMAT_MONO8;
+            //vPixFmt = PIX_FMT_GRAY8;
+            qDebug() << "Video mode 640x480";
+            frameRate = FlyCapture2::FRAMERATE_60;
+            error = cam.SetVideoModeAndFrameRate(videoMode, frameRate);
+            if (error != FlyCapture2::PGRERROR_OK)
+            {
+                error.PrintErrorTrace();
+            }
+            else
+                qDebug() << "Set video framerate to 60 fps";
             break;
         case FlyCapture2::VIDEOMODE_FORMAT7:
             error = cam.GetFormat7Configuration(&fmt7settings, &pPktSize, &pPercPktSize);
@@ -102,14 +115,16 @@ void PtGreyInterface::Initialize()
             else {
                 width = fmt7settings.width;
                 height = fmt7settings.height;
-                pixFmt = fmt7settings.pixelFormat;
-                vPixFmt = PIX_FMT_UYVY422; //This is incorrect - should be bayer
+                //pixFmt = fmt7settings.pixelFormat;
+                //vPixFmt = PIX_FMT_UYVY422; //This is incorrect - should be bayer
+                qDebug() << "Video mode format 7";
             }
 
             break;
         default:
             qCritical() << "Unspported video mode set.";
         }
+
         currentFrame = new QImage(width, height, QImage::Format_RGB888);
         if (!currentFrame)
             qCritical() << "QImage not allocated";
@@ -138,6 +153,8 @@ void PtGreyInterface::Initialize()
         strobeControl.delay = 0;
         cam.SetStrobe(&strobeControl, false);
 
+
+
         edgeStrobeControl.duration = 5.0;
         edgeStrobeControl.polarity = 0;
         edgeStrobeControl.source = 2; // GPIO 2
@@ -148,43 +165,6 @@ void PtGreyInterface::Initialize()
         triggerMode.mode = 0;
         triggerMode.onOff = false; // start in async mode
         cam.SetTriggerMode(&triggerMode, false);
-
-
-        // Capture a frame just to make sure...
-        FlyCapture2::Image tmpImage;
-        error = cam.StartCapture(NULL, this);
-        if (error != FlyCapture2::PGRERROR_OK)
-        {
-            error.PrintErrorTrace();
-            qDebug() << "Missed error?";
-        }file://
-        else {
-            unsigned int regVal;
-            qDebug() << "Trigger a shot";
-            do
-            {
-                error = cam.ReadRegister( 0x62C, &regVal );
-                if (error != FlyCapture2::PGRERROR_OK)
-                {
-                    error.PrintErrorTrace();
-                }
-
-            } while ( (regVal >> 31) != 0 );
-            cam.WriteRegister(0x62C,0x80000000); // software trigger
-            error = cam.RetrieveBuffer(&tmpImage);
-            error = cam.RetrieveBuffer(&tmpImage); // this should time out
-            if (error != FlyCapture2::PGRERROR_OK)
-            {
-                error.PrintErrorTrace();
-                qDebug() << "Expected timeout?";
-            }
-        }
-        error = cam.StopCapture();
-        if (error != FlyCapture2::PGRERROR_OK)
-        {
-            error.PrintErrorTrace();
-        }
-
 
         lastGPIOPinState = 0;
 
@@ -222,8 +202,6 @@ void PtGreyInterface::FrameReceived(ImageWithMetadata img)
 
         qDebug() << "Strobed?" << hex << strobed;
     }
-
-
     //qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
 
 }
@@ -237,46 +215,31 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
 
     FlyCapture2::Image tmpImage;
 
+
+
     if (strobeEnabled) {
         qDebug() << "Starting capture... [switching to async]";
-        //cam.WriteRegister(0x0830,0x82100000); // trigger ON
 
         triggerMode.onOff = true;
         error = cam.SetTriggerMode(&triggerMode,false);
-        //if (error != FlyCapture2::PGRERROR_OK)
-        //{
-        //    error.PrintErrorTrace();
-        //}
-        qDebug() << "Enabling GPIO 1 strobe";
-        //cam.WriteRegister(0x1120,0x80030000); // figured out from Flycap2
-        strobeControl.onOff = true;
-        cam.SetStrobe(&strobeControl, false);
-        //edgeStrobeControl.polarity = 1;
-        //cam.SetStrobe(&edgeStrobeControl, false);
-
+        if (error != FlyCapture2::PGRERROR_OK)
+        {
+            error.PrintErrorTrace();
+        }
+        qDebug() << "Enabling GPIO 1 trigger";
     }
     else {
-        qDebug() << "disabling GPIO 1";
-        //cam.WriteRegister(0x1120,0x80040000); // figured out from Flycap2 (PWM mode??)
-        strobeControl.onOff = false;
-        cam.SetStrobe(&strobeControl, false);
-        //edgeStrobeControl.polarity = 0;
-        //cam.SetStrobe(&edgeStrobeControl, false);
+        triggerMode.onOff = false;
+        error = cam.SetTriggerMode(&triggerMode,false);
+        if (error != FlyCapture2::PGRERROR_OK)
+        {
+            error.PrintErrorTrace();
+        }
+        qDebug() << "Disabling GPIO 1 trigger";
+
     }
 
-    //if (strobeEnabled) {
-    //    cam.WriteRegister(0x62C,0x80000000); // software trigger
-    //}
-    //else {
-        qDebug() << "Starting capture... [switching to sync]";
-        cam.WriteRegister(0x0830,0x80100000); // trigger off
-        //triggerMode.onOff = false;
-        //error = cam.SetTriggerMode(&triggerMode,false);
-        //if (error != FlyCapture2::PGRERROR_OK)
-        //{
-        //    error.PrintErrorTrace();
-        //}
-    //}
+
 
     error = cam.StartCapture(OnImageGrabbed, this);
     if (error != FlyCapture2::PGRERROR_OK)
@@ -306,20 +269,27 @@ void PtGreyInterface::StopCapture()
 {
     FlyCapture2::Error error;
     qDebug() << "Stopping capture... [switching to async]";
-    cam.WriteRegister(0x0830,0x82100000); // trigger ON
-    //triggerMode.onOff = true;
-    //FlyCapture2::Error error = cam.SetTriggerMode(&triggerMode,false);
-    //if (error != FlyCapture2::PGRERROR_OK)
-    //{
-    //    error.PrintErrorTrace();
-    //}
-
-    qDebug() << "Stopping capture... [stopping capture]";
-    error = cam.StopCapture();
+    triggerMode.onOff = false;
+    error = cam.SetTriggerMode(&triggerMode,false);
     if (error != FlyCapture2::PGRERROR_OK)
     {
         error.PrintErrorTrace();
     }
+    qDebug() << "Disabling GPIO 1 trigger";
+
+    qDebug() << "Stopping capture... [stopping capture]";
+    error = cam.StopCapture();
+
+
+
+
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+    }
+
+
+
     else {
         isCapturing = false;
         emit capturingEnded();
