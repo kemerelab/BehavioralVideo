@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QThread>
 
+unsigned int registers[590];    //for dumping camera registers to
 
 PtGreyInterface::PtGreyInterface(QObject *parent) :
     QObject(parent)
@@ -91,7 +92,7 @@ void PtGreyInterface::Initialize()
 
 
         switch (videoMode) {
-        case FlyCapture2::VIDEOMODE_640x480Y8:
+        case FlyCapture2::VIDEOMODE_640x480Y8:{
             width = 640;
             height = 480;
             //pixFmt = FlyCapture2::PIXEL_FORMAT_MONO8;
@@ -105,7 +106,22 @@ void PtGreyInterface::Initialize()
             }
             else
                 qDebug() << "Set video framerate to 60 fps";
+            qDebug() << "Begin dumping registers...";
+            cam.ReadRegisterBlock ( 0xFFFF, 4042260480, registers, 590);     //necessary for 30hz async
+
+            qDebug() << "Register dump complete";
+
+            shutter.type = FlyCapture2::SHUTTER;
+            shutter.autoManualMode = false;
+            shutter.absValue = 16.0;
+            shutter.absControl = true;
+            shutter.present = true;
+
+            error = cam.SetProperty( &shutter, false );
+
+
             break;
+        }
         case FlyCapture2::VIDEOMODE_FORMAT7:
             error = cam.GetFormat7Configuration(&fmt7settings, &pPktSize, &pPercPktSize);
             if (error != FlyCapture2::PGRERROR_OK)

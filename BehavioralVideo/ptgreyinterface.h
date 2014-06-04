@@ -49,6 +49,7 @@ private:
     FlyCapture2::Image *pImage; //PtGrey format
     FlyCapture2::VideoMode videoMode;
     FlyCapture2::FrameRate frameRate;
+    FlyCapture2::Property shutter;
 
 
     bool isCapturing;
