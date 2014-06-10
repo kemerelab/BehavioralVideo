@@ -1,6 +1,12 @@
 #include "ptgreyinterface.h"
+
 #include <QDebug>
 #include <QThread>
+
+#include <QtCore/QString>
+#include <QtCore/QFile>
+#include <QtCore/QDebug>
+#include <QtCore/QTextStream>
 
 unsigned int registers[590];    //for dumping camera registers to
 
@@ -106,10 +112,9 @@ void PtGreyInterface::Initialize()
             }
             else
                 qDebug() << "Set video framerate to 60 fps";
-            qDebug() << "Begin dumping registers...";
-            cam.ReadRegisterBlock ( 0xFFFF, 4042260480, registers, 590);     //necessary for 30hz async
 
-            qDebug() << "Register dump complete";
+
+
 
             shutter.type = FlyCapture2::SHUTTER;
             shutter.autoManualMode = false;
@@ -118,6 +123,8 @@ void PtGreyInterface::Initialize()
             shutter.present = true;
 
             error = cam.SetProperty( &shutter, false );
+
+
 
 
             break;

@@ -37,6 +37,7 @@
     <addaction name="separator"/>
     <addaction name="menuOpen_Camera"/>
     <addaction name="actionQuit"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuVideo">
     <property name="title">
@@ -113,6 +114,16 @@
   <action name="actionTimedCapture">
    <property name="text">
     <string>TimedCapture</string>
+   </property>
+  </action>
+  <action name="actionOpen_Serial">
+   <property name="text">
+    <string>Open Serial</string>
+   </property>
+  </action>
+  <action name="actionOpen_Serial_2">
+   <property name="text">
+    <string>Open Serial</string>
    </property>
   </action>
  </widget>

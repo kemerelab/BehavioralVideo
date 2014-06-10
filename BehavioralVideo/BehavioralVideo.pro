@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui multimedia
-
+QT += serialport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = BehavioralVideo
@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     videoglwidget.cpp \
     videowriter.cpp \
     fakecamerainterface.cpp \
-    ptgreyinterface.cpp
+    ptgreyinterface.cpp \
+    serial.cpp
 
 HEADERS  += mainwindow.h \
     videowidget.h \
@@ -35,7 +36,8 @@ HEADERS  += mainwindow.h \
     videowriter.h \
     fakecamerainterface.h \
     ptgreyinterface.h \
-    threads.h
+    threads.h \
+    serial.h
 
 FORMS    += mainwindow.ui
 
