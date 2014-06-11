@@ -10,6 +10,12 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 #include "serial.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+
+
 
 QT_USE_NAMESPACE
 
@@ -18,7 +24,7 @@ QThread cameraThread;
 QThread videoWriterThread;
 
 char buffer[10];
-QString portname;
+
 
 int main(int argc, char *argv[])
 {
@@ -28,35 +34,24 @@ int main(int argc, char *argv[])
 
 
     QSerialPortInfo myinfo;
-    qDebug() << "Detected Serial Ports:";
+
+    qDebug() << "Selected Serial Port:";
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-           if (info.portName() == "ttyACM1"){
-                portname = info.portName();
-                qDebug() << "Name        : " << info.portName();
+           if (info.manufacturer() == "Texas Instruments"){
+
+               qDebug() << "Name        : " << info.portName();
                qDebug() << "Description : " << info.description();
                qDebug() << "Manufacturer: " << info.manufacturer();
                myinfo = info;
                break;
-
-            }
-
+           }
     }
-
+    if (myinfo.portName() == ""){
+        qDebug() << "No TI Serial Device Found";
+    }
     QSerialPort serial(myinfo);
-    qDebug() << serial.portName();
     serial.open(QIODevice::ReadWrite);
-    qDebug() << "error:"<< serial.error();
-    serial.setBaudRate(QSerialPort::Baud9600);
-    serial.setDataBits(QSerialPort::Data8);
-    serial.setParity(QSerialPort::NoParity);
-    serial.setStopBits(QSerialPort::OneStop);
-
     serial.write("test\r");
-    serial.close();
-
-
-
-
 
 
     cameraThread.start();
