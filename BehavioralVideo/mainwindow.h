@@ -36,8 +36,12 @@ public slots:
     void openFakeVideo();
     void countFrames(QImage);
 
+
 signals:
     void initializeVideo(QString filename);
+
+private slots:
+    void on_actionOpen_Serial_triggered();
 
 private:
     Ui::MainWindow *ui;

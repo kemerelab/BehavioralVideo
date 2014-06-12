@@ -2,12 +2,15 @@
 #include "ui_mainwindow.h"
 #include "fakecamerainterface.h"
 #include "threads.h"
+
 #include <QThread>
 #include <QTimer>
 #include <QDateTime>
 #include <QFileDialog>
 #include <QDebug>
 #include <QMessageBox>
+#include "serial.h"
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -74,7 +77,8 @@ void MainWindow::openPtGreyCamera()
 
 void MainWindow::openFakeVideo()
 {
-    fakeCamera = new FakeVideoGenerator();
+    fakeCamera = new FakeVideoGenerator();QSerialPortInfo myinfo;
+
     fakeCamera->moveToThread(&cameraThread);
     ui->menuOpen_Camera->setDisabled(true);
     QObject::connect(fakeCamera, SIGNAL(newFrame(QImage)),videoWidget,
@@ -176,3 +180,9 @@ void MainWindow::disableVideoSaving()
     qDebug() << "Disable video saving triggered";
 }
 
+
+void MainWindow::on_actionOpen_Serial_triggered()
+{
+    Serial Ser;
+    Ser.openSerial();
+}

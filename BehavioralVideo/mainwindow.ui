@@ -35,6 +35,7 @@
      <addaction name="actionFakeVideo"/>
     </widget>
     <addaction name="separator"/>
+    <addaction name="actionOpen_Serial"/>
     <addaction name="menuOpen_Camera"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
@@ -55,6 +56,17 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -117,11 +129,6 @@
    </property>
   </action>
   <action name="actionOpen_Serial">
-   <property name="text">
-    <string>Open Serial</string>
-   </property>
-  </action>
-  <action name="actionOpen_Serial_2">
    <property name="text">
     <string>Open Serial</string>
    </property>

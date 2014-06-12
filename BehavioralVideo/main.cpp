@@ -7,12 +7,9 @@
 #include <QThread>
 #include <QTimer>
 #include <QDebug>
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
-#include "serial.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+
+
+
 
 
 
@@ -23,7 +20,7 @@ QThread pgThread;
 QThread cameraThread;
 QThread videoWriterThread;
 
-char buffer[10];
+
 
 
 int main(int argc, char *argv[])
@@ -33,25 +30,6 @@ int main(int argc, char *argv[])
 
 
 
-    QSerialPortInfo myinfo;
-
-    qDebug() << "Selected Serial Port:";
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-           if (info.manufacturer() == "Texas Instruments"){
-
-               qDebug() << "Name        : " << info.portName();
-               qDebug() << "Description : " << info.description();
-               qDebug() << "Manufacturer: " << info.manufacturer();
-               myinfo = info;
-               break;
-           }
-    }
-    if (myinfo.portName() == ""){
-        qDebug() << "No TI Serial Device Found";
-    }
-    QSerialPort serial(myinfo);
-    serial.open(QIODevice::ReadWrite);
-    serial.write("test\r");
 
 
     cameraThread.start();
