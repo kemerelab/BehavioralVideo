@@ -8,7 +8,8 @@
 #include "videowriter.h"
 #include "ptgreyinterface.h"
 #include "fakecamerainterface.h"
-
+#include <QSerialPort>
+#include "serial.h"
 namespace Ui {
 class MainWindow;
 }
@@ -25,6 +26,7 @@ public:
     VideoWriter *videoWriter;
     PtGreyInterface *pgCamera;
     FakeVideoGenerator *fakeCamera;
+    QSerialPort serial;
 
 public slots:
     void openVideoFile();
@@ -35,18 +37,20 @@ public slots:
     void openPtGreyCamera();
     void openFakeVideo();
     void countFrames(QImage);
+    void openController(QString);
 
 
 signals:
     void initializeVideo(QString filename);
 
 private slots:
-    void on_actionOpen_Serial_triggered();
+
 
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
     int frameCount;
+    QString name;
 
 
     enum IntermediateSavingState {

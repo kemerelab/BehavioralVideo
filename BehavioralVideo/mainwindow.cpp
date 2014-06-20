@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "fakecamerainterface.h"
 #include "threads.h"
@@ -9,17 +9,56 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QMessageBox>
-#include "serial.h"
+#include <QMenuBar>
+
+#include <QtUiTools/QtUiTools>
 
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+
+
+
     ui->setupUi(this);
     layout = new QGridLayout(ui->centralWidget);
 
     videoWidget = new VideoGLWidget();
+
+    QSignalMapper* signalMapper = new QSignalMapper (this);
+
+
+
+    QMenu *controller = new QMenu("Controller");
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+           if (info.manufacturer() != ""){
+               qDebug() << "Name        : " << info.portName();
+               qDebug() << "Description : " << info.description();
+               qDebug() << "Manufacturer: " << info.manufacturer();
+               name = info.portName();
+               QAction *action = new QAction(info.description(),this);
+               controller->addAction(action);
+               connect(action,SIGNAL(triggered()),signalMapper,SLOT(map()));
+               signalMapper->setMapping(action, info.description());
+
+           }
+    }
+
+    connect(signalMapper, SIGNAL(mapped(QString)), this, SLOT(openController(QString)));
+
+    foreach (QAction *menuaction, ui->menuBar->actions()){
+        if (menuaction->text() == "File"){
+            foreach(QAction *filemenuaction, menuaction->menu()->actions()){
+                if (filemenuaction->text() == "Open Camera"){
+                    menuaction->menu()->insertMenu(filemenuaction, controller);
+
+                }
+            }
+        }
+    }
+
+
 
     videoWidget->setSurfaceType(QSurface::OpenGLSurface);
     videoWidget->create();
@@ -47,6 +86,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     intermediateSavingState = NOT_SAVING;
     //qDebug() << "Thread for mainwindow: " << QThread::currentThreadId();
+
+
 
 }
 
@@ -181,8 +222,21 @@ void MainWindow::disableVideoSaving()
 }
 
 
-void MainWindow::on_actionOpen_Serial_triggered()
+void MainWindow::openController(QString name)
 {
-    Serial Ser;
-    Ser.openSerial();
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+           if (info.description() == name){
+               serial.setPort(info);
+               serial.open(QIODevice::ReadWrite);
+               if (serial.isOpen()){
+                   qDebug() << "Serial port is open ";
+               }
+               else{
+                   qDebug() << "Serial port not open";
+               }
+
+           }
+    }
+    serial.write("test\r");
+
 }

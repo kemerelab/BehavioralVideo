@@ -6,7 +6,10 @@
 
 QT       += core gui multimedia
 QT += serialport
+QT += uitools
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+
 
 TARGET = BehavioralVideo
 TEMPLATE = app
