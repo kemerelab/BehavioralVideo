@@ -38,6 +38,7 @@ public slots:
     void openFakeVideo();
     void countFrames(QImage);
     void openController(QString);
+    void openPGCamera(QString);
 
 
 signals:

@@ -34,6 +34,7 @@ void PtGreyInterface::Initialize()
     // Pick camera (change from first)
     if (numCameras >= 1) {
         FlyCapture2::PGRGuid guid;
+
         error = busMgr.GetCameraFromIndex(0, &guid);
         if (error != FlyCapture2::PGRERROR_OK)
         {

@@ -27,15 +27,7 @@
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuOpen_Camera">
-     <property name="title">
-      <string>Open Camera</string>
-     </property>
-     <addaction name="actionPointGrey"/>
-     <addaction name="actionFakeVideo"/>
-    </widget>
     <addaction name="separator"/>
-    <addaction name="menuOpen_Camera"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
    </widget>

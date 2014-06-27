@@ -27,6 +27,40 @@ MainWindow::MainWindow(QWidget *parent) :
     videoWidget = new VideoGLWidget();
 
 
+    QSignalMapper* cameraMapper = new QSignalMapper(this);
+    QMenu *cameramenu = new QMenu("Open Camera");
+
+    FlyCapture2::BusManager busMgr;
+    FlyCapture2::PGRGuid guid;
+    FlyCapture2::CameraInfo camInfo;
+    FlyCapture2::Camera cameralist[10];
+    unsigned int x;
+    for (x=0; x<10;x++)
+    {
+
+        if (busMgr.GetCameraFromIndex(x, &guid) != FlyCapture2::PGRERROR_OK)
+        {
+            break;
+        }
+        cameralist[x].Connect(&guid);
+        cameralist[x].GetCameraInfo(&camInfo);
+        QAction *action = new QAction("Point Grey " + QString::number(camInfo.serialNumber),this);
+        cameramenu->addAction(action);
+        connect(action, SIGNAL(triggered()),cameraMapper,SLOT(map()));
+        cameraMapper->setMapping(action,QString::number(camInfo.serialNumber));
+    }
+    connect(cameraMapper,SIGNAL(mapped(QString)),this,SLOT(openPGCamera(QString)));
+    foreach(QAction *menuaction, ui->menuBar->actions()){
+        if (menuaction->text() == "File"){
+            foreach(QAction *filemenuaction, menuaction->menu()->actions()){
+                if (filemenuaction->text() == "Quit"){
+                    menuaction->menu()->insertMenu(filemenuaction, cameramenu);
+                }
+            }
+        }
+    }
+
+
     QSignalMapper* signalMapper = new QSignalMapper (this);
     QMenu *controller = new QMenu("Open Controller");
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
@@ -55,6 +89,8 @@ MainWindow::MainWindow(QWidget *parent) :
             }
         }
     }
+
+
 
 
 
@@ -98,7 +134,7 @@ void MainWindow::openPtGreyCamera()
 {
     pgCamera = new PtGreyInterface();
     pgCamera->moveToThread(&pgThread);
-    ui->menuOpen_Camera->setDisabled(true);
+    //ui->menuOpen_Camera->setDisabled(true);
     QObject::connect(pgCamera, SIGNAL(capturingEnded()), this, SLOT(handleVideoSaving()));
     QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget,
                      SLOT(newFrame(QImage)));
@@ -116,10 +152,10 @@ void MainWindow::openPtGreyCamera()
 
 void MainWindow::openFakeVideo()
 {
-    fakeCamera = new FakeVideoGenerator();QSerialPortInfo myinfo;
+    fakeCamera = new FakeVideoGenerator();
 
     fakeCamera->moveToThread(&cameraThread);
-    ui->menuOpen_Camera->setDisabled(true);
+    //ui->menuOpen_Camera->setDisabled(true);
     QObject::connect(fakeCamera, SIGNAL(newFrame(QImage)),videoWidget,
                      SLOT(newFrame(QImage)));
     QObject::connect(fakeCamera, SIGNAL(newFrame(QImage)),videoWriter,
@@ -222,9 +258,14 @@ void MainWindow::disableVideoSaving()
 
 void MainWindow::openController(QString name)
 {
-    controller->setDisabled(true);
+
     qDebug()<< "Initializing Controller";
     Serial *serial = new Serial;
     serial->connect(name);
 
+}
+
+void MainWindow::openPGCamera(QString serialnumber)
+{
+    qDebug()<< "recieved number:"<<serialnumber;
 }
