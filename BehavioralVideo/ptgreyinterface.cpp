@@ -8,7 +8,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QTextStream>
 
-unsigned int registers[590];    //for dumping camera registers to
+//unsigned int registers[590];    //for dumping camera registers to
 
 PtGreyInterface::PtGreyInterface(QObject *parent) :
     QObject(parent)

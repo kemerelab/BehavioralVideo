@@ -1,10 +1,15 @@
+#include <QThread>
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
+#include <QDebug>
+#include "threads.h"
 
-//#include <QtSerialPort/QSerialPort>
-//#include <QtSerialPort/QSerialPortInfo>
-//#include <QDebug>
-//class serialThread : public QThread
-//{
-//        Q_OBJECT
-//public:
-//    void run(QSerialPortInfo);
-//};
+class Serial : public QObject
+{
+    Q_OBJECT
+public:
+    QString portname;
+    QSerialPort port;
+    ~Serial();
+    void connect(QString portname);
+};

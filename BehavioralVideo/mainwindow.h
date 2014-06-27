@@ -26,7 +26,7 @@ public:
     VideoWriter *videoWriter;
     PtGreyInterface *pgCamera;
     FakeVideoGenerator *fakeCamera;
-    QSerialPort serial;
+    Serial serial;
 
 public slots:
     void openVideoFile();
@@ -42,6 +42,7 @@ public slots:
 
 signals:
     void initializeVideo(QString filename);
+    void initializeController(QString portname);
 
 private slots:
 

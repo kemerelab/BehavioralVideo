@@ -26,11 +26,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     videoWidget = new VideoGLWidget();
 
+
     QSignalMapper* signalMapper = new QSignalMapper (this);
-
-
-
-    QMenu *controller = new QMenu("Controller");
+    QMenu *controller = new QMenu("Open Controller");
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
            if (info.manufacturer() != ""){
                qDebug() << "Name        : " << info.portName();
@@ -40,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
                QAction *action = new QAction(info.description(),this);
                controller->addAction(action);
                connect(action,SIGNAL(triggered()),signalMapper,SLOT(map()));
-               signalMapper->setMapping(action, info.description());
+               signalMapper->setMapping(action, info.portName());
 
            }
     }
@@ -224,19 +222,9 @@ void MainWindow::disableVideoSaving()
 
 void MainWindow::openController(QString name)
 {
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-           if (info.description() == name){
-               serial.setPort(info);
-               serial.open(QIODevice::ReadWrite);
-               if (serial.isOpen()){
-                   qDebug() << "Serial port is open ";
-               }
-               else{
-                   qDebug() << "Serial port not open";
-               }
-
-           }
-    }
-    serial.write("test\r");
+    controller->setDisabled(true);
+    qDebug()<< "Initializing Controller";
+    Serial *serial = new Serial;
+    serial->connect(name);
 
 }

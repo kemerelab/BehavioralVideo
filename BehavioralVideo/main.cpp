@@ -30,13 +30,6 @@ int main(int argc, char *argv[])
 
 
 
-//    Serial Ser;
-//    Ser.openSerial();
-//    Ser.testSerial();
-
-
-
-
 
     cameraThread.start();
     videoWriterThread.start();
