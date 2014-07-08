@@ -10,6 +10,8 @@
 #include "fakecamerainterface.h"
 #include <QSerialPort>
 #include "serial.h"
+#include <QHash>
+
 namespace Ui {
 class MainWindow;
 }
@@ -24,9 +26,12 @@ public:
     VideoGLWidget *videoWidget;
     //VideoWidget *videoWidget;
     VideoWriter *videoWriter;
-    PtGreyInterface *pgCamera;
+    //int cameraIndex;
+    //PtGreyInterface *pgCamera[10];
     FakeVideoGenerator *fakeCamera;
     Serial serial;
+    QHash<unsigned int, PtGreyInterface *> cameraDictionary;
+
 
 public slots:
     void openVideoFile();
@@ -34,11 +39,12 @@ public slots:
     void handleVideoSaving();
     void videoSavingStarted();
     void disableVideoSaving();
-    void openPtGreyCamera();
+    void openPtGreyCamera(FlyCapture2::PGRGuid guid);
     void openFakeVideo();
     void countFrames(QImage);
     void openController(QString);
-    void openPGCamera(QString);
+    void openPGCamera(int);
+
 
 
 signals:

@@ -16,10 +16,11 @@ PtGreyInterface::PtGreyInterface(QObject *parent) :
     isCapturing = false;
 }
 
-void PtGreyInterface::Initialize()
+void PtGreyInterface::Initialize(uint serialnumber)
 {
     FlyCapture2::Error error;
     FlyCapture2::BusManager busMgr;
+
     unsigned int numCameras;
     error = busMgr.GetNumOfCameras(&numCameras);
     if (error != FlyCapture2::PGRERROR_OK)
@@ -29,20 +30,20 @@ void PtGreyInterface::Initialize()
 
     qDebug() << "Number of cameras detected: " << numCameras;
 
-
-
     // Pick camera (change from first)
     if (numCameras >= 1) {
         FlyCapture2::PGRGuid guid;
-
-        error = busMgr.GetCameraFromIndex(0, &guid);
+        error = busMgr.GetCameraFromSerialNumber(serialnumber, &guid);
+        //error = busMgr.GetCameraFromIndex(0,&guid);
         if (error != FlyCapture2::PGRERROR_OK)
         {
             error.PrintErrorTrace();
         }
 
         // Connect to camera
+
         error = cam.Connect(&guid);
+
         if (error != FlyCapture2::PGRERROR_OK)
         {
             error.PrintErrorTrace();

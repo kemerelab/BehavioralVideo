@@ -30,7 +30,7 @@ signals:
     void capturingEnded(void);
 
 public slots:
-    void Initialize(void);
+    void Initialize(uint serialnumber);
     //void FrameReceived(void);
     //void FrameReceived(FlyCapture2::Image pImage);
     void FrameReceived(ImageWithMetadata img);

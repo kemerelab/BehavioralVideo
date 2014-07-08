@@ -12,6 +12,9 @@ void Serial::connect(QString portname)
            if (info.portName() == portname){
                 port.setPort(info);
                 port.open(QIODevice::ReadWrite);
+                if (!port.isOpen()){
+                    qDebug() << "Port not open";
+                }
                 port.setBaudRate(QSerialPort::Baud9600);
                 break;
            }
