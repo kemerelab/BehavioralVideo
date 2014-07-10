@@ -5,6 +5,7 @@
 #include "ffmpeg.h"
 #include <FlyCapture2.h>
 #include <QImage>
+#include "videowriter.h"
 
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData);
@@ -28,6 +29,7 @@ signals:
     void newFrame(QImage frame);
     void capturingStarted(void);
     void capturingEnded(void);
+    void initializeVideo(QString filename);
 
 public slots:
     void Initialize(uint serialnumber);
@@ -40,7 +42,7 @@ public slots:
     void StopCapture(void);
 
 public:
-
+    VideoWriter* videowriter;
 private:
     int width, height;
     FlyCapture2::PixelFormat pixFmt;

@@ -23,14 +23,17 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    VideoGLWidget *videoWidget;
+    VideoGLWidget *videoWidget[10];
     //VideoWidget *videoWidget;
-    VideoWriter *videoWriter;
+    VideoWriter *videoWriter[10];
     //int cameraIndex;
     //PtGreyInterface *pgCamera[10];
     FakeVideoGenerator *fakeCamera;
-    Serial serial;
+    Serial* serial;
     QHash<unsigned int, PtGreyInterface *> cameraDictionary;
+    uint widgetx;
+    uint widgety;
+    uint numcameras;
 
 
 public slots:
@@ -39,7 +42,7 @@ public slots:
     void handleVideoSaving();
     void videoSavingStarted();
     void disableVideoSaving();
-    void openPtGreyCamera(FlyCapture2::PGRGuid guid);
+    //void openPtGreyCamera(FlyCapture2::PGRGuid guid);
     void openFakeVideo();
     void countFrames(QImage);
     void openController(QString);
@@ -48,7 +51,7 @@ public slots:
 
 
 signals:
-    void initializeVideo(QString filename);
+
     void initializeController(QString portname);
 
 private slots:

@@ -80,8 +80,8 @@ void PtGreyInterface::Initialize(uint serialnumber)
 
 
         qDebug() <<
-            "\n*** CAMERA INFORMATION ***\n" <<
-            "Serial number -" << camInfo.serialNumber <<
+            "\n*** CAMERA INFORMATION ***" <<
+            "\nSerial number -" << camInfo.serialNumber <<
             "\nCamera model - " << camInfo.modelName <<
             "\nCamera vendor - " << camInfo.vendorName <<
             "\nSensor - " << camInfo.sensorInfo <<
@@ -319,6 +319,7 @@ void PtGreyInterface::StopCapture()
         isCapturing = false;
         emit capturingEnded();
     }
+
 }
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)

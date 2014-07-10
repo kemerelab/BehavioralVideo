@@ -90,11 +90,6 @@
     <string>Fake Video</string>
    </property>
   </action>
-  <action name="actionPointGrey">
-   <property name="text">
-    <string>Point Grey</string>
-   </property>
-  </action>
   <action name="actionTimedCapture">
    <property name="text">
     <string>TimedCapture</string>

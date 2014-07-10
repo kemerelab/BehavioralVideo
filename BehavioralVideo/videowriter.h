@@ -12,13 +12,14 @@ class VideoWriter : public QObject
 public:
     explicit VideoWriter(QObject *parent = 0);
 
+
 signals:
     void videoInitialized(void);
     void writingStarted(void);
     void writingEnded(void);
 
 public slots:
-    void initialize(QString filename);
+    void initialize(QString);
     void newFrame(QImage image);
     void beginWriting(void);
     void endWriting(void);

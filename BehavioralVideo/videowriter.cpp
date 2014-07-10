@@ -16,6 +16,7 @@ VideoWriter::VideoWriter(QObject *parent) :
 
 void VideoWriter::initialize(QString filename)
 {
+
     vFilename = &filename;
     if ((width == -1) || (height == -1)) {
         // Haven't received any frames yet, so we don't know what size they are...
@@ -181,6 +182,7 @@ void VideoWriter::newFrame(QImage image)
 
 void VideoWriter::beginWriting()
 {
+    qDebug() << "begin writing";
     currentlyWriting = true;
     emit writingStarted();
 }

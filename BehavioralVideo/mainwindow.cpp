@@ -24,7 +24,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     layout = new QGridLayout(ui->centralWidget);
 
-    videoWidget = new VideoGLWidget();
+    widgetx = 0;
+    widgety = 1;
+    numcameras = 0;
 
     //detect cameras and add to menu
 
@@ -93,29 +95,27 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-
-
+    /*
+    videoWidget = new VideoGLWidget();
     videoWidget->setSurfaceType(QSurface::OpenGLSurface);
     videoWidget->create();
     QWidget *container = QWidget::createWindowContainer(videoWidget);
     layout->addWidget(container,1,1);
+    */
+
+
+
+
     ui->centralWidget->setLayout(layout);
     //videoWidget->setAnimating(true);
 
-    videoWriter = new VideoWriter();
-    // Should connect this signal to the writing process so that files get closed
-    videoWriter->moveToThread(&videoWriterThread);
 
     connect(ui->actionOpenVideoFile, SIGNAL(triggered()), this, SLOT(openVideoFile()));
-    connect(this, SIGNAL(initializeVideo(QString)), videoWriter, SLOT(initialize(QString)));
-    connect(videoWriter, SIGNAL(videoInitialized()), this, SLOT(enableVideoSaving()));
     connect(ui->actionRecord, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
 
     connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
     //connect(ui->actionStop, SIGNAL(triggered()), videoWriter, SLOT(endWriting()));
 
-    connect(videoWriter, SIGNAL(writingStarted()), this, SLOT(videoSavingStarted()));
-    connect(videoWriter, SIGNAL(writingEnded()), this, SLOT(disableVideoSaving()));
     //connect(ui->actionPointGrey, SIGNAL(triggered()), this, SLOT(openPtGreyCamera()));
     connect(ui->actionFakeVideo, SIGNAL(triggered()), this, SLOT(openFakeVideo()));
 
@@ -131,9 +131,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
+//void MainWindow::openPtGreyCamera(){};
 void MainWindow::openFakeVideo()
 {
+    /*
     fakeCamera = new FakeVideoGenerator();
 
     fakeCamera->moveToThread(&cameraThread);
@@ -143,6 +144,7 @@ void MainWindow::openFakeVideo()
     QObject::connect(fakeCamera, SIGNAL(newFrame(QImage)),videoWriter,
                      SLOT(newFrame(QImage)));
     QMetaObject::invokeMethod(fakeCamera, "StartVideo", Qt::QueuedConnection);
+    */
 }
 
 void MainWindow::countFrames(QImage)
@@ -150,13 +152,14 @@ void MainWindow::countFrames(QImage)
     if (intermediateSavingState == CURRENTLY_SAVING) {
         frameCount++;
         if (frameCount >= 30 ) {
-            ui->actionStop->trigger();
+            //ui->actionStop->trigger();
         }
     }
 }
 
 void MainWindow::openVideoFile()
 {
+
     bool fileSelected = false;
     QString filename;
     QDateTime curtime = QDateTime::currentDateTime();
@@ -186,12 +189,17 @@ void MainWindow::openVideoFile()
         }
     }
 
-    if (fileSelected)
-        emit initializeVideo(filename);
+    if (fileSelected){
+        foreach(uint serialnumber, cameraDictionary.keys()){
+            emit cameraDictionary[serialnumber]->initializeVideo(filename + QString::number(serialnumber) + ".mp4");
+        }
+    }
+
 }
 
 void MainWindow::enableVideoSaving()
 {
+    qDebug() << "enablevideosaving";
     ui->actionRecord->setEnabled(true);
     ui->actionOpenVideoFile->setDisabled(true);
 }
@@ -201,26 +209,31 @@ void MainWindow::handleVideoSaving()
     // This is where we want to stop the camera, and then restart it
     // with strobes once video saving is started (below)
 
-    /*
-    switch (intermediateSavingState) {
-    case NOT_SAVING: // should be triggered by menu
-        QMetaObject::invokeMethod(pgCamera, "StopCapture", Qt::QueuedConnection);
-        intermediateSavingState = STARTING_SAVING;
-        break;
-    case STARTING_SAVING: // should be triggered by captureEnded
-        QMetaObject::invokeMethod(videoWriter, "beginWriting", Qt::QueuedConnection);
-        intermediateSavingState = CURRENTLY_SAVING;
-        break;
-    case CURRENTLY_SAVING: // should be triggered by menu
-        QMetaObject::invokeMethod(pgCamera, "StopCapture", Qt::QueuedConnection);
-        intermediateSavingState = ENDING_SAVING;
-        break;
-    case ENDING_SAVING: // should be triggered by captureEnded
-        QMetaObject::invokeMethod(videoWriter, "endWriting", Qt::QueuedConnection);
-        intermediateSavingState = NOT_SAVING;
-        break;
+    qDebug() << intermediateSavingState;
+    foreach(PtGreyInterface* camera, cameraDictionary){
+        switch (intermediateSavingState) {
+        case NOT_SAVING: // should be triggered by menu
+            QMetaObject::invokeMethod(camera, "StopCapture", Qt::QueuedConnection);
+            intermediateSavingState = STARTING_SAVING;
+            break;
+        case STARTING_SAVING: // should be triggered by captureEnded
 
-    };*/
+            QMetaObject::invokeMethod(camera->videowriter, "beginWriting", Qt::QueuedConnection);
+
+            intermediateSavingState = CURRENTLY_SAVING;
+            serial->port.write("all\r");
+            break;
+        case CURRENTLY_SAVING: // should be triggered by menu
+            QMetaObject::invokeMethod(camera, "StopCapture", Qt::QueuedConnection);
+            intermediateSavingState = ENDING_SAVING;
+            break;
+        case ENDING_SAVING: // should be triggered by captureEnded
+            QMetaObject::invokeMethod(camera->videowriter, "endWriting", Qt::QueuedConnection);
+            intermediateSavingState = NOT_SAVING;
+            serial->port.write("\r");
+            break;
+        }
+    }
 
 
 }
@@ -245,57 +258,62 @@ void MainWindow::openController(QString name)
 {
 
     qDebug()<< "Initializing Controller";
-    Serial *serial = new Serial;
+    serial = new Serial;
     serial->connect(name);
+
 
 }
 
 void MainWindow::openPGCamera(int serialnumber)
 {
-    qDebug()<< "recieved serial number:"<<serialnumber;
-
-
-
-    //PtGreyInterface pgCameraobject;
     PtGreyInterface* pgCamera = new PtGreyInterface();
     pgCamera->moveToThread(&pgThread);
+
+    pgCamera->videowriter = new VideoWriter();
+    // Should connect this signal to the writing process so that files get closed
+    pgCamera->videowriter->moveToThread(&videoWriterThread);
+
+    connect(pgCamera->videowriter, SIGNAL(videoInitialized()), this, SLOT(enableVideoSaving()));
+    connect(pgCamera->videowriter, SIGNAL(writingStarted()), this, SLOT(videoSavingStarted()));
+    connect(pgCamera->videowriter, SIGNAL(writingEnded()), this, SLOT(disableVideoSaving()));
+
+
+    connect(pgCamera,SIGNAL(initializeVideo(QString)),pgCamera->videowriter,SLOT(initialize(QString)));
+
     cameraDictionary.insert(serialnumber,pgCamera);
+
+
+    videoWidget[numcameras] = new VideoGLWidget();
+    videoWidget[numcameras]->setSurfaceType(QSurface::OpenGLSurface);
+    videoWidget[numcameras]->create();
+    QWidget *container = QWidget::createWindowContainer(videoWidget[numcameras]);
+
+    if (((float)widgetx*(float)4)/((float)widgety*(float)3) < (float)16/(float)9){
+        widgetx++;
+    }
+    else
+    {
+        widgety++;
+        widgetx = 1;
+    }
+
+    layout->addWidget(container,widgety,widgetx);
+
     QObject::connect(pgCamera, SIGNAL(capturingEnded()), this, SLOT(handleVideoSaving()));
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget,
+    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget[numcameras],
                      SLOT(newFrame(QImage)));
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWriter,
+    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),pgCamera->videowriter,
                      SLOT(newFrame(QImage)));
     frameCount = 0;
     QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),this,
                      SLOT(countFrames(QImage)));
-    QObject::connect(videoWriter, SIGNAL(writingStarted()),pgCamera,
+    QObject::connect(pgCamera->videowriter, SIGNAL(writingStarted()),pgCamera,
                      SLOT(StartCaptureWithStrobe()));
-    QObject::connect(videoWriter, SIGNAL(writingEnded()),pgCamera,
+    QObject::connect(pgCamera->videowriter, SIGNAL(writingEnded()),pgCamera,
                      SLOT(StartCaptureNoStrobe()));
     QMetaObject::invokeMethod(pgCamera, "Initialize", Qt::QueuedConnection,Q_ARG(uint, serialnumber));
-
+    numcameras++;
 
 }
 
-//void MainWindow::openPtGreyCamera(FlyCapture2::PGRGuid guid)
-//{
-    /*
-    pgCamera = new PtGreyInterface();
-    pgCamera->moveToThread(&pgThread);
-    //ui->menuOpen_Camera->setDisabled(true);
-    QObject::connect(pgCamera, SIGNAL(capturingEnded()), this, SLOT(handleVideoSaving()));
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget,
-                     SLOT(newFrame(QImage)));
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWriter,
-                     SLOT(newFrame(QImage)));
-    frameCount = 0;
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),this,
-                     SLOT(countFrames(QImage)));
-    QObject::connect(videoWriter, SIGNAL(writingStarted()),pgCamera,
-                     SLOT(StartCaptureWithStrobe()));
-    QObject::connect(videoWriter, SIGNAL(writingEnded()),pgCamera,
-                     SLOT(StartCaptureNoStrobe()));
-    QMetaObject::invokeMethod(pgCamera, "Initialize", Qt::QueuedConnection);
-    */
-//}
 
