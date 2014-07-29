@@ -14,7 +14,7 @@ PtGreyInterface::PtGreyInterface(QObject *parent) :
     QObject(parent)
 {
     isCapturing = false;
-
+    serialNumber = 0;
 }
 
 void PtGreyInterface::Initialize(uint serialnumber)
@@ -171,7 +171,11 @@ void PtGreyInterface::Initialize(uint serialnumber)
 
 }
 
-//void PtGreyInterface::FrameReceived(FlyCapture2::Image pImage)
+void PtGreyInterface::InitializeVideoWriting(QString filename)
+{
+    emit initializeVideoWriting(filename + "_" + QString::number(serialNumber) + ".mp4");
+}
+
 void PtGreyInterface::FrameReceived(FlyCapture2::Image img)
 {
     memcpy(currentFrame->bits(), img.GetData(), img.GetDataSize());
@@ -196,7 +200,6 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
         {
             error.PrintErrorTrace();
         }
-        qDebug() << "Enabling GPIO 1 trigger";
     }
     else {
         triggerMode.onOff = false;
@@ -205,8 +208,6 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
         {
             error.PrintErrorTrace();
         }
-        qDebug() << "Disabling GPIO 1 trigger";
-
     }
 
     error = cam.StartCapture(OnImageGrabbed, this);
@@ -235,33 +236,17 @@ void PtGreyInterface::StartCaptureWithStrobe()
 void PtGreyInterface::StopCapture()
 {
     FlyCapture2::Error error;
-    qDebug() << "Stopping capture... [switching to async]";
-    triggerMode.onOff = false;
-    error = cam.SetTriggerMode(&triggerMode,false);
-    if (error != FlyCapture2::PGRERROR_OK)
-    {
-        error.PrintErrorTrace();
-    }
-    qDebug() << "Disabling GPIO 1 trigger";
-
-    qDebug() << "Stopping capture... [stopping capture]";
     error = cam.StopCapture();
 
-
-
-
     if (error != FlyCapture2::PGRERROR_OK)
     {
         error.PrintErrorTrace();
     }
-
-
 
     else {
         isCapturing = false;
         emit capturingEnded();
     }
-
 }
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)

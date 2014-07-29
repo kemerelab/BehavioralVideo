@@ -28,7 +28,7 @@ public:
     //PtGreyInterface *pgCamera[10];
     FakeVideoGenerator *fakeCamera;
     Serial* serial;
-    QHash<unsigned int, PtGreyInterface *> cameraDictionary;
+    QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
     uint widgetx;
     uint widgety;
     uint numcameras;
@@ -46,13 +46,9 @@ public slots:
     void openController(QString);
     void openPGCamera(int);
 
-
-
-
 signals:
-
-    void initializeController(QString portname);
-
+    //void initializeController(QString portname);
+    void initializeVideoWriting(QString filename);
 
 private slots:
 
@@ -66,7 +62,7 @@ private:
 
     enum IntermediateSavingState {
         NOT_SAVING,
-        STARTING_SAVING,
+        READY_TO_SAVE,
         CURRENTLY_SAVING,
         ENDING_SAVING
     };

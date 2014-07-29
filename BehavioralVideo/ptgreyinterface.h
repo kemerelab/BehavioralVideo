@@ -25,11 +25,12 @@ signals:
     void newFrame(QImage frame);
     void capturingStarted(void);
     void capturingEnded(void);
-    void initializeVideo(QString filename);
+    void initializeVideoWriting(QString filename);
 
 
 public slots:
     void Initialize(uint serialnumber);
+    void InitializeVideoWriting(QString filename);
     //void FrameReceived(void);
     void FrameReceived(FlyCapture2::Image pImage);
     void StartCapture(bool enableStrobe);
@@ -40,6 +41,8 @@ public slots:
 
 public:
     VideoWriter* videowriter;
+    int serialNumber;
+
 private:
     int width, height;
     FlyCapture2::PixelFormat pixFmt;
