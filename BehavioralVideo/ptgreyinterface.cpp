@@ -159,45 +159,11 @@ void PtGreyInterface::Initialize(uint serialnumber)
         currentFrame = new QImage(width, height, QImage::Format_RGB888);
         if (!currentFrame)
             qCritical() << "QImage not allocated";
-        /*
-        currentFrame_RAW = avcodec_alloc_frame();
-        if (!currentFrame_RAW)
-            qCritical() << "Could not allocate frame";
 
-        sws_ctx = sws_getContext(width, height, vPixFmt, width, height, PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
-
-        currentFrame_RGB = avcodec_alloc_frame();
-        if (!currentFrame_RGB)
-            qDebug() << "Could not allocate frame";
-        avpicture_fill((AVPicture*)currentFrame_RGB, currentFrame->bits(), PIX_FMT_RGB24, width, height);
-*/
-        //qDebug() << "Thread for ptgrey initialize: " << QThread::currentThreadId();
-
-        FlyCapture2::EmbeddedImageInfo embeddedInfo;
-        embeddedInfo.GPIOPinState.onOff = true;
-        cam.SetEmbeddedImageInfo(&embeddedInfo);
-
-        strobeControl.duration = 15.0;
-        strobeControl.polarity = 1.0;
-        strobeControl.source = 3; // GPIO 1
-        strobeControl.onOff = false;
-        strobeControl.delay = 0;
-        cam.SetStrobe(&strobeControl, false);
-
-
-
-        edgeStrobeControl.duration = 5.0;
-        edgeStrobeControl.polarity = 0;
-        edgeStrobeControl.source = 2; // GPIO 2
-        edgeStrobeControl.onOff = true;
-        cam.SetStrobe(&edgeStrobeControl, false);
-
-        triggerMode.source = 1; // GPIO 0
+        triggerMode.source = 0; // GPIO 0
         triggerMode.mode = 0;
         triggerMode.onOff = false; // start in async mode
         cam.SetTriggerMode(&triggerMode, false);
-
-        lastGPIOPinState = 0;
 
         // Start capturing images
         StartCapture(false); // No strobe initially.
@@ -206,35 +172,10 @@ void PtGreyInterface::Initialize(uint serialnumber)
 }
 
 //void PtGreyInterface::FrameReceived(FlyCapture2::Image pImage)
-void PtGreyInterface::FrameReceived(ImageWithMetadata img)
+void PtGreyInterface::FrameReceived(FlyCapture2::Image img)
 {
-    memcpy(currentFrame->bits(), img.flyCapImage.GetData(), img.flyCapImage.GetDataSize());
-    /*
-    int ret = avpicture_fill((AVPicture*)currentFrame_RAW,
-                   (uint8_t*)(pImage.GetData()), vPixFmt, width, height);
-    sws_scale(sws_ctx, currentFrame_RAW->data, currentFrame_RAW->linesize, 0, height,
-              currentFrame_RGB->data, currentFrame_RGB->linesize);
-              */
-    //static unsigned int last = 0;
-    //qDebug() << "[]GPIO value. Last: " << hex << last << " Current: " << hex << img.flag;
-    //last = img.flag;
-
-    bool strobed = ((unsigned int)img.flag & 0x20000000) == 0;
-
+    memcpy(currentFrame->bits(), img.GetData(), img.GetDataSize());
     emit newFrame(*currentFrame);
-
-    unsigned int regVal;
-    if (strobeEnabled) {
-        /*do
-        {
-            cam.ReadRegister( 0x62C, &regVal );
-        } while ( (regVal >> 31) != 0 );
-        cam.WriteRegister(0x62C,0x80000000); // software trigger */
-
-        qDebug() << "Strobed?" << hex << strobed;
-    }
-    //qDebug() << "Thread for SLOT: " << QThread::currentThreadId();
-
 }
 
 void PtGreyInterface::StartCapture(bool enableStrobe)
@@ -244,10 +185,7 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
 
     FlyCapture2::Error error;
 
-    FlyCapture2::Image tmpImage;
-    qDebug() << "strobe:";
-    qDebug() << strobeEnabled;
-
+    qDebug() << "strobe:" << strobeEnabled;
 
     if (strobeEnabled) {
         qDebug() << "Starting capture... [switching to async]";
@@ -271,9 +209,6 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
 
     }
 
-
-    qDebug() << "fix";
-
     error = cam.StartCapture(OnImageGrabbed, this);
 
     if (error != FlyCapture2::PGRERROR_OK)
@@ -284,10 +219,6 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
         isCapturing = true;
         emit capturingStarted();
     }
-
-    qDebug() << "this";
-
-
 }
 
 void PtGreyInterface::StartCaptureNoStrobe()
@@ -335,34 +266,22 @@ void PtGreyInterface::StopCapture()
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)
 {
-    //FlyCapture2::Image nImage;
-    ImageWithMetadata nImage;
+    FlyCapture2::Image nImage;
     //FlyCapture2::Error error = nImage.DeepCopy(pImage);
     FlyCapture2::Error error;
 
-    static FlyCapture2::ImageMetadata im;
-    static unsigned int last = 0;
-    im = pImage->GetMetadata();
-
-    nImage.flag = im.embeddedGPIOPinState;
-
-    //pImage->Convert(FlyCapture2::PIXEL_FORMAT_RGB8, &nImage);
     FlyCapture2::Image::SetDefaultColorProcessing(FlyCapture2::NEAREST_NEIGHBOR);
-    FlyCapture2::Image::SetDefaultOutputFormat(FlyCapture2::PIXEL_FORMAT_RGB);
-    pImage->Convert(&nImage.flyCapImage);
+    pImage->Convert(FlyCapture2::PIXEL_FORMAT_RGB, &nImage);
     if (error != FlyCapture2::PGRERROR_OK)
     {
         //error.PrintErrorTrace();
         //qDebug() << "Error in convert" << error.GetDescription();
     }
     PtGreyInterface *pgInt = (PtGreyInterface *) pCallbackData;
-    //qRegisterMetaType<FlyCapture2::Image>("FlyCapture2::Image");
-    qRegisterMetaType<ImageWithMetadata>("ImageWithMetadata");
+    qRegisterMetaType<FlyCapture2::Image>("FlyCapture2::Image");
     QMetaObject::invokeMethod(pgInt, "FrameReceived", Qt::QueuedConnection,
-                              Q_ARG(ImageWithMetadata, nImage));
-//    Q_ARG(FlyCapture2::Image, nImage));
+                              Q_ARG(FlyCapture2::Image, nImage));
 
-    //qDebug() << "Thread for callback: " << QThread::currentThreadId();
     return;
 }
 

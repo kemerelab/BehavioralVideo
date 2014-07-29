@@ -21,6 +21,26 @@ void Serial::connect(QString portname)
     }
 }
 
+void Serial::stopTrigger()
+{
+    port.write("\r");
+}
+
+void Serial::startTrigger(bool syncState) {
+    if (syncState)
+        port.write("all\r");
+    else
+        port.write("cam\r");
+}
+
+void Serial::startTriggerNoSync() {
+    startTrigger(false);
+}
+
+void Serial::startTriggerSync() {
+    startTrigger(true);
+}
+
 Serial::~Serial()
 {
 

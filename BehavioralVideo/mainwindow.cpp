@@ -79,7 +79,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->centralWidget->setLayout(layout);
     connect(ui->actionOpenVideoFile, SIGNAL(triggered()), this, SLOT(openVideoFile()));
     connect(ui->actionRecord, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
-
     connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
 
     connect(ui->actionFakeVideo, SIGNAL(triggered()), this, SLOT(openFakeVideo()));
@@ -181,11 +180,9 @@ void MainWindow::handleVideoSaving()
             intermediateSavingState = STARTING_SAVING;
             break;
         case STARTING_SAVING: // should be triggered by captureEnded
-            qDebug() << "test1";
             QMetaObject::invokeMethod(camera->videowriter, "beginWriting", Qt::QueuedConnection);
-            qDebug() << "test2";
+            QMetaObject::invokeMethod(serial, "startTriggerSync", Qt::QueuedConnection);
             intermediateSavingState = CURRENTLY_SAVING;
-            serial->port.write("all\r");
             break;
         case CURRENTLY_SAVING: // should be triggered by menu
             QMetaObject::invokeMethod(camera, "StopCapture", Qt::QueuedConnection);
@@ -194,7 +191,7 @@ void MainWindow::handleVideoSaving()
         case ENDING_SAVING: // should be triggered by captureEnded
             QMetaObject::invokeMethod(camera->videowriter, "endWriting", Qt::QueuedConnection);
             intermediateSavingState = NOT_SAVING;
-            serial->port.write("\r");
+            QMetaObject::invokeMethod(serial, "stopTrigger", Qt::QueuedConnection);
             break;
         }
     }

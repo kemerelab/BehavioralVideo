@@ -12,4 +12,11 @@ public:
     QSerialPort port;
     ~Serial();
     void connect(QString portname);
+
+public slots:
+    void startTrigger(bool syncState);
+    void startTriggerNoSync(void);
+    void startTriggerSync(void);
+    void stopTrigger(void);
+
 };

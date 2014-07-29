@@ -10,13 +10,7 @@
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData);
 
-struct ImageWithMetadata {
-    FlyCapture2::Image flyCapImage;
-    unsigned int flag;
-};
-
-//Q_DECLARE_METATYPE(FlyCapture2::Image);
-Q_DECLARE_METATYPE(ImageWithMetadata);
+Q_DECLARE_METATYPE(FlyCapture2::Image);
 
 class PtGreyInterface : public QObject
 {
@@ -37,8 +31,7 @@ signals:
 public slots:
     void Initialize(uint serialnumber);
     //void FrameReceived(void);
-    //void FrameReceived(FlyCapture2::Image pImage);
-    void FrameReceived(ImageWithMetadata img);
+    void FrameReceived(FlyCapture2::Image pImage);
     void StartCapture(bool enableStrobe);
     void StartCaptureNoStrobe(void);
     void StartCaptureWithStrobe(void);

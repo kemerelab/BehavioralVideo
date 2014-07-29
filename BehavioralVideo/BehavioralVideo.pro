@@ -14,9 +14,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = BehavioralVideo
 TEMPLATE = app
 
-macx: INCLUDEPATH += /opt/local/include
-macx: LIBS += -L"/opt/local/lib" -lavcodec -lavformat -lswscale -lavutil
-
 unix: INCLUDEPATH += /usr/include /usr/include/flycapture
 unix: LIBS += -L"/usr/lib" -lavcodec -lavformat -lswscale -lavutil -lflycapture
 unix: QMAKE_CXXFLAGS += -D__STDC_CONSTANT_MACROS
