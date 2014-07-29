@@ -24,12 +24,15 @@ class PtGreyInterface : public QObject
 public:
     explicit PtGreyInterface(QObject *parent = 0);
      ~PtGreyInterface(void);
+    bool isochStarted;
+
 
 signals:
     void newFrame(QImage frame);
     void capturingStarted(void);
     void capturingEnded(void);
     void initializeVideo(QString filename);
+
 
 public slots:
     void Initialize(uint serialnumber);
@@ -40,6 +43,7 @@ public slots:
     void StartCaptureNoStrobe(void);
     void StartCaptureWithStrobe(void);
     void StopCapture(void);
+
 
 public:
     VideoWriter* videowriter;
@@ -52,6 +56,7 @@ private:
     FlyCapture2::VideoMode videoMode;
     FlyCapture2::FrameRate frameRate;
     FlyCapture2::Property shutter;
+    FlyCapture2::Property gain;
 
 
     bool isCapturing;

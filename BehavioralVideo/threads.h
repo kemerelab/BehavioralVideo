@@ -3,7 +3,8 @@
 
 #include <QThread>
 
-extern QThread pgThread;
+extern QThread pgThread0;
+extern QThread pgThread1;
 extern QThread cameraThread;
 extern QThread videoWriterThread;
 

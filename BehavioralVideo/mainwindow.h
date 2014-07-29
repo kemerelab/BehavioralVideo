@@ -24,8 +24,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     VideoGLWidget *videoWidget[10];
-    //VideoWidget *videoWidget;
-    VideoWriter *videoWriter[10];
     //int cameraIndex;
     //PtGreyInterface *pgCamera[10];
     FakeVideoGenerator *fakeCamera;
@@ -34,7 +32,7 @@ public:
     uint widgetx;
     uint widgety;
     uint numcameras;
-
+    uint counter;
 
 public slots:
     void openVideoFile();
@@ -50,9 +48,11 @@ public slots:
 
 
 
+
 signals:
 
     void initializeController(QString portname);
+
 
 private slots:
 

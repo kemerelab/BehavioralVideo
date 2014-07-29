@@ -14,6 +14,7 @@ PtGreyInterface::PtGreyInterface(QObject *parent) :
     QObject(parent)
 {
     isCapturing = false;
+
 }
 
 void PtGreyInterface::Initialize(uint serialnumber)
@@ -115,8 +116,13 @@ void PtGreyInterface::Initialize(uint serialnumber)
             else
                 qDebug() << "Set video framerate to 60 fps";
 
-
-
+            gain.type = FlyCapture2::GAIN;
+            gain.absControl = true;
+            gain.onePush = false;
+            gain.onOff = true;
+            gain.autoManualMode = false;
+            gain.absValue = 12.0;
+            cam.SetProperty(&gain, false);
 
             shutter.type = FlyCapture2::SHUTTER;
             shutter.autoManualMode = false;
@@ -239,7 +245,8 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
     FlyCapture2::Error error;
 
     FlyCapture2::Image tmpImage;
-
+    qDebug() << "strobe:";
+    qDebug() << strobeEnabled;
 
 
     if (strobeEnabled) {
@@ -265,8 +272,10 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
     }
 
 
+    qDebug() << "fix";
 
     error = cam.StartCapture(OnImageGrabbed, this);
+
     if (error != FlyCapture2::PGRERROR_OK)
     {
         error.PrintErrorTrace();
@@ -275,6 +284,8 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
         isCapturing = true;
         emit capturingStarted();
     }
+
+    qDebug() << "this";
 
 
 }

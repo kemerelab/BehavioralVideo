@@ -73,9 +73,10 @@ void VideoWriter::initialize(QString filename)
 
         /* set the output parameters (must be done even if no
            parameters). */
-        if (av_set_parameters(oc, NULL) < 0) {
+        /*if (av_set_parameters(oc, NULL) < 0) {
             qDebug() << "Error setting parameters";
-        }
+
+        }*/
 
         //av_dump_format(oc, 0, vFilename->toLocal8Bit().data(), 1);
 

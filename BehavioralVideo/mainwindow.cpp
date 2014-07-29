@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
+    counter = 0;
 
 
     ui->setupUi(this);
@@ -67,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QSignalMapper* signalMapper = new QSignalMapper (this);
     QMenu *controller = new QMenu("Open Controller");
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-           if (info.manufacturer() != ""){
+          if (info.manufacturer() != ""){
                qDebug() << "Name        : " << info.portName();
                qDebug() << "Description : " << info.description();
                qDebug() << "Manufacturer: " << info.manufacturer();
@@ -152,6 +152,7 @@ void MainWindow::countFrames(QImage)
     if (intermediateSavingState == CURRENTLY_SAVING) {
         frameCount++;
         if (frameCount >= 30 ) {
+
             //ui->actionStop->trigger();
         }
     }
@@ -168,8 +169,8 @@ void MainWindow::openVideoFile()
 
     while (!fileSelected) {
         filename = QFileDialog::getSaveFileName(this, tr("Select Video Filename"),
-                                                defaultFilename, tr("Video File (*.mp4)"), 0,
-                                                        QFileDialog::DontUseNativeDialog);
+                                                defaultFilename, tr("Video File (*.mp4)"), 0);
+                                                        //QFileDialog::DontUseNativeDialog);
 
         if (filename == NULL)
             break;
@@ -217,9 +218,9 @@ void MainWindow::handleVideoSaving()
             intermediateSavingState = STARTING_SAVING;
             break;
         case STARTING_SAVING: // should be triggered by captureEnded
-
+            qDebug() << "test1";
             QMetaObject::invokeMethod(camera->videowriter, "beginWriting", Qt::QueuedConnection);
-
+            qDebug() << "test2";
             intermediateSavingState = CURRENTLY_SAVING;
             serial->port.write("all\r");
             break;
@@ -267,7 +268,15 @@ void MainWindow::openController(QString name)
 void MainWindow::openPGCamera(int serialnumber)
 {
     PtGreyInterface* pgCamera = new PtGreyInterface();
-    pgCamera->moveToThread(&pgThread);
+
+    if (counter == 1){
+        pgCamera->moveToThread(&pgThread1);
+    }
+    else{
+        pgCamera->moveToThread(&pgThread0);
+        counter++;
+    }
+    //pgCamera->moveToThread(&pgThread);
 
     pgCamera->videowriter = new VideoWriter();
     // Should connect this signal to the writing process so that files get closed
@@ -281,7 +290,6 @@ void MainWindow::openPGCamera(int serialnumber)
     connect(pgCamera,SIGNAL(initializeVideo(QString)),pgCamera->videowriter,SLOT(initialize(QString)));
 
     cameraDictionary.insert(serialnumber,pgCamera);
-
 
     videoWidget[numcameras] = new VideoGLWidget();
     videoWidget[numcameras]->setSurfaceType(QSurface::OpenGLSurface);
