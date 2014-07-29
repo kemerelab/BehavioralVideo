@@ -190,6 +190,7 @@ void VideoWriter::beginWriting()
 
 void VideoWriter::endWriting()
 {
+    qDebug() << "End writing";
     if (currentlyWriting) {
         currentlyWriting = false;
         // write FFMPEG trailer
@@ -215,6 +216,7 @@ void VideoWriter::endWriting()
 
         // close(info->fdts);
         emit writingEnded();
+        qDebug() << "Writing ended signal";
     }
 
 }

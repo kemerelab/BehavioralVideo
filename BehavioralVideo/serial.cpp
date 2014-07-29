@@ -29,8 +29,10 @@ void Serial::stopTrigger()
 void Serial::startTrigger(bool syncState) {
     if (syncState)
         port.write("all\r");
-    else
+    else {
         port.write("cam\r");
+        qDebug() << "cam enabled";
+    }
 }
 
 void Serial::startTriggerNoSync() {
