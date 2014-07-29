@@ -28,10 +28,31 @@ MainWindow::MainWindow(QWidget *parent) :
     widgety = 1;
     numcameras = 0;
 
+    //detect serial ports and add to menu
+    QSignalMapper* signalMapper = new QSignalMapper (this);
+    QMenu *controller = new QMenu("Open Controller");
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+          if (info.manufacturer() != ""){
+               qDebug() << "Name        : " << info.portName();
+               qDebug() << "Description : " << info.description();
+               qDebug() << "Manufacturer: " << info.manufacturer();
+               name = info.portName();
+               QAction *action = new QAction(info.description(),this);
+               controller->addAction(action);
+               connect(action,SIGNAL(triggered()),signalMapper,SLOT(map()));
+               signalMapper->setMapping(action, info.portName());
+           }
+    }
+
+    connect(signalMapper, SIGNAL(mapped(QString)), this, SLOT(openController(QString)));
+    ui->menuFile->insertMenu(ui->actionQuit,controller);
+
+
+
     //detect cameras and add to menu
 
     QSignalMapper* cameraMapper = new QSignalMapper(this);
-    QMenu *cameramenu = new QMenu("Open Camera");
+    QMenu *cameraMenu = new QMenu("Open Camera");
 
     FlyCapture2::BusManager busMgr;
     FlyCapture2::PGRGuid guid;
@@ -48,81 +69,22 @@ MainWindow::MainWindow(QWidget *parent) :
         cameralist[x].Connect(&guid);
         cameralist[x].GetCameraInfo(&camInfo);
         QAction *action = new QAction("Point Grey " + QString::number(camInfo.serialNumber),this);
-        cameramenu->addAction(action);
+        cameraMenu->addAction(action);
         connect(action, SIGNAL(triggered()),cameraMapper,SLOT(map()));
         cameraMapper->setMapping(action,camInfo.serialNumber);
     }
     connect(cameraMapper,SIGNAL(mapped(int)),this,SLOT(openPGCamera(int)));
-    foreach(QAction *menuaction, ui->menuBar->actions()){
-        if (menuaction->text() == "File"){
-            foreach(QAction *filemenuaction, menuaction->menu()->actions()){
-                if (filemenuaction->text() == "Quit"){
-                    menuaction->menu()->insertMenu(filemenuaction, cameramenu);
-                }
-            }
-        }
-    }
-
-    //detect serial ports and add to menu
-    QSignalMapper* signalMapper = new QSignalMapper (this);
-    QMenu *controller = new QMenu("Open Controller");
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-          if (info.manufacturer() != ""){
-               qDebug() << "Name        : " << info.portName();
-               qDebug() << "Description : " << info.description();
-               qDebug() << "Manufacturer: " << info.manufacturer();
-               name = info.portName();
-               QAction *action = new QAction(info.description(),this);
-               controller->addAction(action);
-               connect(action,SIGNAL(triggered()),signalMapper,SLOT(map()));
-               signalMapper->setMapping(action, info.portName());
-
-           }
-    }
-
-    connect(signalMapper, SIGNAL(mapped(QString)), this, SLOT(openController(QString)));
-
-    foreach (QAction *menuaction, ui->menuBar->actions()){
-        if (menuaction->text() == "File"){
-            foreach(QAction *filemenuaction, menuaction->menu()->actions()){
-                if (filemenuaction->text() == "Open Camera"){
-                    menuaction->menu()->insertMenu(filemenuaction, controller);
-
-                }
-            }
-        }
-    }
-
-
-
-    /*
-    videoWidget = new VideoGLWidget();
-    videoWidget->setSurfaceType(QSurface::OpenGLSurface);
-    videoWidget->create();
-    QWidget *container = QWidget::createWindowContainer(videoWidget);
-    layout->addWidget(container,1,1);
-    */
-
-
-
+    ui->menuFile->insertMenu(ui->actionQuit,cameraMenu);
 
     ui->centralWidget->setLayout(layout);
-    //videoWidget->setAnimating(true);
-
-
     connect(ui->actionOpenVideoFile, SIGNAL(triggered()), this, SLOT(openVideoFile()));
     connect(ui->actionRecord, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
 
     connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(handleVideoSaving()));
-    //connect(ui->actionStop, SIGNAL(triggered()), videoWriter, SLOT(endWriting()));
 
-    //connect(ui->actionPointGrey, SIGNAL(triggered()), this, SLOT(openPtGreyCamera()));
     connect(ui->actionFakeVideo, SIGNAL(triggered()), this, SLOT(openFakeVideo()));
 
     intermediateSavingState = NOT_SAVING;
-    //qDebug() << "Thread for mainwindow: " << QThread::currentThreadId();
-
-
 
 }
 
@@ -168,8 +130,9 @@ void MainWindow::openVideoFile()
     QString defaultFilename = QDir::currentPath() + "/BehaviorVideo_" + curtime.toString("MMddyyyy_hhmmss") + ".mp4";
 
     while (!fileSelected) {
-        filename = QFileDialog::getSaveFileName(this, tr("Select Video Filename"),
-                                                defaultFilename, tr("Video File (*.mp4)"), 0);
+        filename = QFileDialog::getSaveFileName(0,tr("SelectVideoFilename"),QDir::currentPath());
+                    //this, tr("Select Video Filename"));
+                                                //tr(defaultFilename), tr("Video File (*.mp4)"), 0);
                                                         //QFileDialog::DontUseNativeDialog);
 
         if (filename == NULL)
