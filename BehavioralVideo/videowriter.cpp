@@ -121,13 +121,14 @@ void VideoWriter::initialize(QString filename)
         if (!sws_ctx) {
             qCritical() << "Error allocating SWS context.";
         }
-        tmp_picture = avcodec_alloc_frame();        qDebug() << "Video Initialized emitted";
-
+        tmp_picture = avcodec_alloc_frame();
         if (!tmp_picture) {
             qCritical() << "Error allocating tmp_picture frame.";
         }
 
         waitingToInitialize = false;
+        qDebug() << "Video Initialized emitted";
+
         // Should check here for errors above
         emit videoInitialized();
     }

@@ -19,4 +19,8 @@ public slots:
     void startTriggerSync(void);
     void stopTrigger(void);
 
+signals:
+    void triggersStopped(void);
+    void triggersStarted(bool syncState);
+
 };

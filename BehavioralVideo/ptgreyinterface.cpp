@@ -160,13 +160,11 @@ void PtGreyInterface::Initialize(uint serialnumber)
         if (!currentFrame)
             qCritical() << "QImage not allocated";
 
-        triggerMode.source = 1; // GPIO 0
+        triggerMode.source = 0; // GPIO 0
         triggerMode.mode = 0;
         triggerMode.onOff = false; // start in async mode
         cam.SetTriggerMode(&triggerMode, false);
 
-        // Start capturing images
-        StartCapture(false); // No strobe initially.
     }
 
 }
@@ -182,17 +180,16 @@ void PtGreyInterface::FrameReceived(FlyCapture2::Image img)
     emit newFrame(*currentFrame);
 }
 
-void PtGreyInterface::StartCapture(bool enableStrobe)
+void PtGreyInterface::StartCapture(bool enableTrigger)
 {
-    qDebug() << "Starting capture...";
-    strobeEnabled = enableStrobe;
+    triggerEnabled = enableTrigger;
 
     FlyCapture2::Error error;
 
-    qDebug() << "strobe:" << strobeEnabled;
+    qDebug() << "strobe:" << triggerEnabled;
 
-    if (strobeEnabled) {
-        qDebug() << "Starting capture... [switching to async]";
+    if (triggerEnabled) {
+        qDebug() << "capture starting [trigger on]";
 
         triggerMode.onOff = true;
         error = cam.SetTriggerMode(&triggerMode,false);
@@ -202,6 +199,7 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
         }
     }
     else {
+        qDebug() << "capture starting [trigger off]";
         triggerMode.onOff = false;
         error = cam.SetTriggerMode(&triggerMode,false);
         if (error != FlyCapture2::PGRERROR_OK)
@@ -222,14 +220,14 @@ void PtGreyInterface::StartCapture(bool enableStrobe)
     }
 }
 
-void PtGreyInterface::StartCaptureNoStrobe()
-{
-    StartCapture(false);
-}
-
-void PtGreyInterface::StartCaptureWithStrobe()
+void PtGreyInterface::StartCameraCaptureSync()
 {
     StartCapture(true);
+}
+
+void PtGreyInterface::StartCameraCaptureAsync()
+{
+    StartCapture(false);
 }
 
 
@@ -248,6 +246,18 @@ void PtGreyInterface::StopCapture()
         qDebug() << "Stoping capture";
         emit capturingEnded();
     }
+}
+
+void PtGreyInterface::StopAndRestartCaptureSync()
+{
+    StopCapture();
+    StartCapture(true);
+}
+
+void PtGreyInterface::StopAndRestartCaptureAsync()
+{
+    StopCapture();
+    StartCapture(false);
 }
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)

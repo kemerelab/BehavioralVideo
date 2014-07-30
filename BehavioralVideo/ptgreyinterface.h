@@ -34,9 +34,11 @@ public slots:
     //void FrameReceived(void);
     void FrameReceived(FlyCapture2::Image pImage);
     void StartCapture(bool enableStrobe);
-    void StartCaptureNoStrobe(void);
-    void StartCaptureWithStrobe(void);
+    void StartCameraCaptureSync(void);
+    void StartCameraCaptureAsync(void);
     void StopCapture(void);
+    void StopAndRestartCaptureSync(void);
+    void StopAndRestartCaptureAsync(void);
 
 
 public:
@@ -56,7 +58,7 @@ private:
 
 
     bool isCapturing;
-    bool strobeEnabled;
+    bool triggerEnabled;
     PixelFormat vPixFmt;
 
     FlyCapture2::StrobeControl strobeControl, edgeStrobeControl;

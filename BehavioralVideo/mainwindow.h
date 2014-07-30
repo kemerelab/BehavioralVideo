@@ -12,6 +12,8 @@
 #include "serial.h"
 #include <QHash>
 
+#define MAX_CAMERAS 10
+
 namespace Ui {
 class MainWindow;
 }
@@ -31,24 +33,47 @@ public:
     QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
     uint widgetx;
     uint widgety;
-    uint numcameras;
-    uint counter;
+    uint numCameras;
 
 public slots:
+    void openController(QString);
+    void openPGCamera(int);
+
+    void updateVideoSavingMenus(bool writing);
+    void controlVideoWriter();
+
     void openVideoFile();
-    void enableVideoSaving();
-    void handleVideoSaving();
-    void videoSavingStarted();
-    void disableVideoSaving();
+    void aggregateVideoWritingInitialized();
+    void aggregateVideoWritingStarted();
+    void aggregateVideoWritingEnded();
+    void aggregateVideoCaptureStarted();
+    void aggregateVideoCaptureEnded();
+
+    void startCaptureAsync();
+    void startCaptureSync();
+    void restartCaptureAsync();
+    void restartCaptureSync();
+
+    void resetSavingMenus();
     //void openPtGreyCamera(FlyCapture2::PGRGuid guid);
     void openFakeVideo();
     void countFrames(QImage);
-    void openController(QString);
-    void openPGCamera(int);
 
 signals:
     //void initializeController(QString portname);
     void initializeVideoWriting(QString filename);
+    void videoWritingInitialized(void);
+    void videoCaptureStartedSync(void);
+    void videoCaptureStartedAsync(void);
+    void videoCaptureEnded(void);
+    void videoWritingStarted(void);
+    void videoWritingEnded(void);
+    void startVideoWriting(void);
+    void endVideoWriting(void);
+    void startCaptureAsyncSignal(void);
+    void startCaptureSyncSignal(void);
+    void restartCaptureAsyncSignal(void);
+    void restartCaptureSyncSignal(void);
 
 private slots:
 
@@ -59,14 +84,21 @@ private:
     int frameCount;
     QString name;
 
-
-    enum IntermediateSavingState {
+    enum SavingState {
         NOT_SAVING,
-        READY_TO_SAVE,
-        CURRENTLY_SAVING,
-        ENDING_SAVING
+        READY_TO_WRITE,
+        CURRENTLY_WRITING
     };
-    IntermediateSavingState intermediateSavingState;
+    SavingState savingState;
+    uint numCamerasReadyToWrite;
+    uint numCamerasInitialized;
+    uint numCamerasCapturing;
+
+    enum CameraState {
+        SYNC,
+        ASYNC
+    };
+    CameraState cameraState;
 };
 
 #endif // MAINWINDOW_H
