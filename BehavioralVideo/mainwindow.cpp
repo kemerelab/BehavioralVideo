@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QMenuBar>
+#include <QErrorMessage>
 
 #include <QtUiTools/QtUiTools>
 
@@ -27,25 +28,25 @@ MainWindow::MainWindow(QWidget *parent) :
     numCamerasReadyToWrite = 0;
     numCamerasInitialized = 0;
     numCamerasCapturing = 0;
+    foundController = false;
 
-    //detect serial ports and add to menu
-    QSignalMapper* signalMapper = new QSignalMapper (this);
-    QMenu *controller = new QMenu("Open Controller");
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-          if (info.manufacturer() != ""){
-               qDebug() << "Name        : " << info.portName();
-               qDebug() << "Description : " << info.description();
-               qDebug() << "Manufacturer: " << info.manufacturer();
-               name = info.portName();
-               QAction *action = new QAction(info.description(),this);
-               controller->addAction(action);
-               connect(action,SIGNAL(triggered()),signalMapper,SLOT(map()));
-               signalMapper->setMapping(action, info.portName());
+
+          if (info.description().left(17) == "Camera Controller"){
+
+                 openController(info.description());
+                 foundController = true;
+                 break;
            }
     }
+       if (foundController == false){
 
-    connect(signalMapper, SIGNAL(mapped(QString)), this, SLOT(openController(QString)));
-    ui->menuFile->insertMenu(ui->actionQuit,controller);
+           QErrorMessage errorMessage;
+           errorMessage.showMessage("Controller not found. Saving disabled");
+           ui->actionOpenVideoFile->setDisabled(true);
+           errorMessage.exec();
+       }
+
 
     //detect cameras and add to menu
 

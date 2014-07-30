@@ -93,7 +93,7 @@ private:
     uint numCamerasReadyToWrite;
     uint numCamerasInitialized;
     uint numCamerasCapturing;
-
+    bool foundController;
     enum CameraState {
         SYNC,
         ASYNC

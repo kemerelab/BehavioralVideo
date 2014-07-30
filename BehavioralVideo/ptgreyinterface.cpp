@@ -160,7 +160,7 @@ void PtGreyInterface::Initialize(uint serialnumber)
         if (!currentFrame)
             qCritical() << "QImage not allocated";
 
-        triggerMode.source = 0; // GPIO 0
+        triggerMode.source = 1; // GPIO 0
         triggerMode.mode = 0;
         triggerMode.onOff = false; // start in async mode
         cam.SetTriggerMode(&triggerMode, false);
