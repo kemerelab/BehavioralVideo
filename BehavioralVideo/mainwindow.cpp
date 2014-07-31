@@ -50,8 +50,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //detect cameras and add to menu
 
-    QSignalMapper* cameraMapper = new QSignalMapper(this);
-    QMenu *cameraMenu = new QMenu("Open Camera");
+    cameraMapper = new QSignalMapper(this);
+    cameraMenu = new QMenu("Open Camera");
 
     FlyCapture2::BusManager busMgr;
     FlyCapture2::PGRGuid guid;
@@ -272,6 +272,19 @@ void MainWindow::openController(QString name)
 
 void MainWindow::openPGCamera(int serialnumber)
 {
+    //remove menu item and replace with disabled dummy
+
+    cameraMenu->removeAction(((QAction *)cameraMapper->mapping(serialnumber)));
+    QAction *tempaction = new QAction("Point Grey " + QString::number(serialnumber),this);
+    tempaction->setDisabled(true);
+    cameraMenu->addAction(tempaction);
+
+
+    //add camera to camer menu
+
+    ui->menuCamera->addAction((QAction *)cameraMapper->mapping(serialnumber));
+
+
     PtGreyInterface* pgCamera = new PtGreyInterface();
     pgCamera->serialNumber = serialnumber;
 

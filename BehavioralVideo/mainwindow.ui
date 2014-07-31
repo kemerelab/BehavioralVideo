@@ -42,8 +42,14 @@
     <addaction name="actionConfigure"/>
     <addaction name="actionTimedCapture"/>
    </widget>
+   <widget class="QMenu" name="menuCamera">
+    <property name="title">
+     <string>Camera</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
+   <addaction name="menuCamera"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionDisplay">

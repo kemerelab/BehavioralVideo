@@ -1,6 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#include <QSignalMapper>
 #include <QMainWindow>
 #include <QGridLayout>
 #include "videowidget.h"
@@ -99,6 +99,8 @@ private:
         ASYNC
     };
     CameraState cameraState;
+    QSignalMapper* cameraMapper;
+    QMenu *cameraMenu;
 };
 
 #endif // MAINWINDOW_H
