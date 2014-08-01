@@ -169,6 +169,12 @@ void PtGreyInterface::Initialize(uint serialnumber)
 
 }
 
+void PtGreyInterface::ChangeTriggerPin(int pin){
+    triggerMode.source = pin;
+    triggerMode.mode = 0;
+    cam.SetTriggerMode(&triggerMode,false);
+}
+
 void PtGreyInterface::InitializeVideoWriting(QString filename)
 {
     emit initializeVideoWriting(filename + "_" + QString::number(serialNumber) + ".mp4");

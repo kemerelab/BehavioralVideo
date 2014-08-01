@@ -25,6 +25,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
     VideoGLWidget *videoWidget[10];
     //int cameraIndex;
     //PtGreyInterface *pgCamera[10];
@@ -38,6 +39,7 @@ public:
 public slots:
     void openController(QString);
     void openPGCamera(int);
+    void selectPin(QString);
 
     void updateVideoSavingMenus(bool writing);
     void controlVideoWriter();

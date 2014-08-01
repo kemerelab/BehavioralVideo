@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "fakecamerainterface.h"
 #include "threads.h"
+#include "ptgreyinterface.h"
 
 #include <QThread>
 #include <QTimer>
@@ -29,13 +30,28 @@ MainWindow::MainWindow(QWidget *parent) :
     numCamerasInitialized = 0;
     numCamerasCapturing = 0;
     foundController = false;
+    bool firmware = false;
+    bool hardware = false;
 
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
 
           if (info.description().left(17) == "Camera Controller"){
 
-                 openController(info.description());
                  foundController = true;
+
+                 //check for correct PCB and Firmware
+
+                 if (info.description().mid(18,7) == "PCB 1.0"){
+
+                     hardware = true;
+                 }
+                 if (info.description().mid(26,7) == "F W 1.0"){
+                     firmware = true;
+                 }
+                 if (hardware && firmware){
+                     openController(info.description());
+                 }
+
                  break;
            }
     }
@@ -43,6 +59,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
            QErrorMessage errorMessage;
            errorMessage.showMessage("Controller not found. Saving disabled");
+           ui->actionOpenVideoFile->setDisabled(true);
+           errorMessage.exec();
+       }
+       else if (!hardware && !firmware){
+           QErrorMessage errorMessage;
+           errorMessage.showMessage("Controller hardware and firmware outdated. Saving disabled");
+           ui->actionOpenVideoFile->setDisabled(true);
+           errorMessage.exec();
+       }
+       else if (!hardware){
+           QErrorMessage errorMessage;
+           errorMessage.showMessage("Controller hardware outdated. Saving disabled");
+           ui->actionOpenVideoFile->setDisabled(true);
+           errorMessage.exec();
+       }
+       else if (!firmware){
+           QErrorMessage errorMessage;
+           errorMessage.showMessage("Controller firmware outdated. Saving disabled");
            ui->actionOpenVideoFile->setDisabled(true);
            errorMessage.exec();
        }
@@ -72,6 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(action, SIGNAL(triggered()),cameraMapper,SLOT(map()));
         cameraMapper->setMapping(action,camInfo.serialNumber);
     }
+
     connect(cameraMapper,SIGNAL(mapped(int)),this,SLOT(openPGCamera(int)));
     ui->menuFile->insertMenu(ui->actionQuit,cameraMenu);
 
@@ -272,80 +307,117 @@ void MainWindow::openController(QString name)
 
 void MainWindow::openPGCamera(int serialnumber)
 {
+    bool initialized = false;
+    foreach (int initializedSerial, cameraInterfaces.keys()){
+        if (initializedSerial == serialnumber){
+            initialized = true;
+        }
+    }
+
     //remove menu item and replace with disabled dummy
-
-    cameraMenu->removeAction(((QAction *)cameraMapper->mapping(serialnumber)));
-    QAction *tempaction = new QAction("Point Grey " + QString::number(serialnumber),this);
-    tempaction->setDisabled(true);
-    cameraMenu->addAction(tempaction);
-
-
-    //add camera to camer menu
-
-    ui->menuCamera->addAction((QAction *)cameraMapper->mapping(serialnumber));
+    if (initialized == false){
+        cameraMenu->removeAction(((QAction *)cameraMapper->mapping(serialnumber)));
+        QAction *tempaction = new QAction("Point Grey " + QString::number(serialnumber),this);
+        tempaction->setDisabled(true);
+        cameraMenu->addAction(tempaction);
 
 
-    PtGreyInterface* pgCamera = new PtGreyInterface();
-    pgCamera->serialNumber = serialnumber;
+        //add camera to camer menu
 
-    if (numCameras == 1){
-        pgCamera->moveToThread(&pgThread1);
+        ui->menuCamera->addAction((QAction *)cameraMapper->mapping(serialnumber));
+
+        //add settings to camera menu
+        QMenu *settingMenu = new QMenu();
+        QMenu *triggerMenu = new QMenu("Trigger Pin");
+        QAction *pinAction0 = new QAction("Pin 0",this);
+        QAction *pinAction1 = new QAction("Pin 1",this);
+        QAction *pinAction2 = new QAction("Pin 2",this);
+        QAction *pinAction3 = new QAction("Pin 3",this);
+        triggerMenu->addAction(pinAction0);
+        triggerMenu->addAction(pinAction1);
+        triggerMenu->addAction(pinAction2);
+        triggerMenu->addAction(pinAction3);
+        settingMenu->addMenu(triggerMenu);
+        ((QAction *)cameraMapper->mapping(serialnumber))->setMenu(settingMenu);
+        QSignalMapper* pinMapper =  new QSignalMapper(this);
+        pinMapper->setMapping(pinAction0,"0" + QString::number(serialnumber));
+        pinMapper->setMapping(pinAction1,"1" + QString::number(serialnumber));
+        pinMapper->setMapping(pinAction2,"2" + QString::number(serialnumber));
+        pinMapper->setMapping(pinAction3,"3" + QString::number(serialnumber));
+        connect(pinAction0, SIGNAL(triggered()),pinMapper,SLOT(map()));
+        connect(pinAction1, SIGNAL(triggered()),pinMapper,SLOT(map()));
+        connect(pinAction2, SIGNAL(triggered()),pinMapper,SLOT(map()));
+        connect(pinAction3, SIGNAL(triggered()),pinMapper,SLOT(map()));
+        connect(pinMapper,SIGNAL(mapped(QString)),this,SLOT(selectPin(QString)));
+
+
+        PtGreyInterface* pgCamera = new PtGreyInterface();
+        pgCamera->serialNumber = serialnumber;
+
+        if (numCameras == 1){
+            pgCamera->moveToThread(&pgThread1);
+        }
+        else{
+            pgCamera->moveToThread(&pgThread0);
+        }
+
+
+        pgCamera->videowriter = new VideoWriter();
+        pgCamera->videowriter->moveToThread(&videoWriterThread);
+
+        connect(pgCamera, SIGNAL(capturingStarted()), this, SLOT(aggregateVideoCaptureStarted()));
+        connect(pgCamera, SIGNAL(capturingEnded()), this, SLOT(aggregateVideoCaptureEnded()));
+        connect(pgCamera->videowriter, SIGNAL(writingEnded()), this, SLOT(aggregateVideoWritingEnded()));
+        connect(pgCamera->videowriter, SIGNAL(videoInitialized()), this, SLOT(aggregateVideoWritingInitialized()));
+        connect(pgCamera->videowriter, SIGNAL(writingStarted()), this, SLOT(aggregateVideoWritingStarted()));
+
+        connect(this,SIGNAL(initializeVideoWriting(QString)),pgCamera,SLOT(InitializeVideoWriting(QString)));
+        connect(pgCamera,SIGNAL(initializeVideoWriting(QString)),pgCamera->videowriter,SLOT(initialize(QString)));
+        connect(this, SIGNAL(startCaptureAsyncSignal()), pgCamera, SLOT(StartCameraCaptureAsync()));
+        connect(this, SIGNAL(startCaptureSyncSignal()), pgCamera, SLOT(StartCameraCaptureSync()));
+        connect(this, SIGNAL(restartCaptureAsyncSignal()), pgCamera, SLOT(StopAndRestartCaptureAsync()));
+        connect(this, SIGNAL(restartCaptureSyncSignal()), pgCamera, SLOT(StopAndRestartCaptureSync()));
+        connect(this, SIGNAL(startVideoWriting()), pgCamera->videowriter, SLOT(beginWriting()));
+        connect(this, SIGNAL(endVideoWriting()), pgCamera->videowriter, SLOT(endWriting()));
+
+        cameraInterfaces.insert(serialnumber,pgCamera);
+
+        videoWidget[numCameras] = new VideoGLWidget();
+        videoWidget[numCameras]->setSurfaceType(QSurface::OpenGLSurface);
+        videoWidget[numCameras]->create();
+        QWidget *container = QWidget::createWindowContainer(videoWidget[numCameras]);
+
+        if (((float)widgetx*(float)4)/((float)widgety*(float)3) < (float)16/(float)9){
+            widgetx++;
+        }
+        else
+        {
+            widgety++;
+            widgetx = 1;
+        }
+
+        layout->addWidget(container,widgety,widgetx);
+
+        QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget[numCameras],
+                         SLOT(newFrame(QImage)));
+        QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),pgCamera->videowriter,
+                         SLOT(newFrame(QImage)));
+        frameCount = 0;
+        QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),this,
+                         SLOT(countFrames(QImage)));
+        QMetaObject::invokeMethod(pgCamera, "Initialize", Qt::QueuedConnection,Q_ARG(uint, serialnumber));
+
+        numCameras++;
+
+        emit startCaptureAsync();
     }
-    else{
-        pgCamera->moveToThread(&pgThread0);
-    }
-    //pgCamera->moveToThread(&pgThread);
-
-    pgCamera->videowriter = new VideoWriter();
-    pgCamera->videowriter->moveToThread(&videoWriterThread);
-
-    connect(pgCamera, SIGNAL(capturingStarted()), this, SLOT(aggregateVideoCaptureStarted()));
-    connect(pgCamera, SIGNAL(capturingEnded()), this, SLOT(aggregateVideoCaptureEnded()));
-    connect(pgCamera->videowriter, SIGNAL(writingEnded()), this, SLOT(aggregateVideoWritingEnded()));
-    connect(pgCamera->videowriter, SIGNAL(videoInitialized()), this, SLOT(aggregateVideoWritingInitialized()));
-    connect(pgCamera->videowriter, SIGNAL(writingStarted()), this, SLOT(aggregateVideoWritingStarted()));
-
-    connect(this,SIGNAL(initializeVideoWriting(QString)),pgCamera,SLOT(InitializeVideoWriting(QString)));
-    connect(pgCamera,SIGNAL(initializeVideoWriting(QString)),pgCamera->videowriter,SLOT(initialize(QString)));
-    connect(this, SIGNAL(startCaptureAsyncSignal()), pgCamera, SLOT(StartCameraCaptureAsync()));
-    connect(this, SIGNAL(startCaptureSyncSignal()), pgCamera, SLOT(StartCameraCaptureSync()));
-    connect(this, SIGNAL(restartCaptureAsyncSignal()), pgCamera, SLOT(StopAndRestartCaptureAsync()));
-    connect(this, SIGNAL(restartCaptureSyncSignal()), pgCamera, SLOT(StopAndRestartCaptureSync()));
-    connect(this, SIGNAL(startVideoWriting()), pgCamera->videowriter, SLOT(beginWriting()));
-    connect(this, SIGNAL(endVideoWriting()), pgCamera->videowriter, SLOT(endWriting()));
-
-    cameraInterfaces.insert(serialnumber,pgCamera);
-
-    videoWidget[numCameras] = new VideoGLWidget();
-    videoWidget[numCameras]->setSurfaceType(QSurface::OpenGLSurface);
-    videoWidget[numCameras]->create();
-    QWidget *container = QWidget::createWindowContainer(videoWidget[numCameras]);
-
-    if (((float)widgetx*(float)4)/((float)widgety*(float)3) < (float)16/(float)9){
-        widgetx++;
-    }
-    else
-    {
-        widgety++;
-        widgetx = 1;
-    }
-
-    layout->addWidget(container,widgety,widgetx);
-
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),videoWidget[numCameras],
-                     SLOT(newFrame(QImage)));
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),pgCamera->videowriter,
-                     SLOT(newFrame(QImage)));
-    frameCount = 0;
-    QObject::connect(pgCamera, SIGNAL(newFrame(QImage)),this,
-                     SLOT(countFrames(QImage)));
-    QMetaObject::invokeMethod(pgCamera, "Initialize", Qt::QueuedConnection,Q_ARG(uint, serialnumber));
-
-    numCameras++;
-
-    emit startCaptureAsync();
 }
 
+void MainWindow::selectPin(QString id){
+    qDebug() << "Setting " + id.mid(1) + " to trigger off pin "+ id.left(1);
+    PtGreyInterface* tempPGCamera = cameraInterfaces[id.mid(1).toInt()];
+    QMetaObject::invokeMethod(tempPGCamera, "ChangeTriggerPin", Qt::QueuedConnection,Q_ARG(int, id.left(1).toInt()));
+}
 
 //void MainWindow::openPtGreyCamera(){};
 void MainWindow::openFakeVideo()

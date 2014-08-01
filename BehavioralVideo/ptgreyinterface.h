@@ -39,30 +39,34 @@ public slots:
     void StopCapture(void);
     void StopAndRestartCaptureSync(void);
     void StopAndRestartCaptureAsync(void);
+    void ChangeTriggerPin(int);
 
 
 public:
     VideoWriter* videowriter;
     int serialNumber;
+    bool initialized;
+
 
 private:
     int width, height;
     FlyCapture2::PixelFormat pixFmt;
     QImage *currentFrame;
-    FlyCapture2::Camera cam;
+
     FlyCapture2::Image *pImage; //PtGrey format
     FlyCapture2::VideoMode videoMode;
     FlyCapture2::FrameRate frameRate;
     FlyCapture2::Property shutter;
     FlyCapture2::Property gain;
-
+    FlyCapture2::Camera cam;
+    FlyCapture2::TriggerMode triggerMode;
 
     bool isCapturing;
     bool triggerEnabled;
     PixelFormat vPixFmt;
 
     FlyCapture2::StrobeControl strobeControl, edgeStrobeControl;
-    FlyCapture2::TriggerMode triggerMode;
+
     int lastGPIOPinState;
 
     AVFrame *currentFrame_RAW;
