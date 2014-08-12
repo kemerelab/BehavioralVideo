@@ -1,0 +1,6 @@
+
+# don't track build directories
+build-*/
+
+# don't track Dropbox stuff
+.DS-store
