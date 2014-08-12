@@ -2,5 +2,8 @@
 # don't track build directories
 build-*/
 
+# don't track QTCreator user files
+*.pro.user
+
 # don't track Dropbox stuff
 .DS-store
