@@ -10,4 +10,6 @@ Currently implemented:
 (4) Video compression and saving using the LibAV library
 
 The code depends on features of QT5.2 and LibAV and the PointGrey dependencies. It has 
-been tested in OSX (no PointGrey) and in Ubuntu 12.04.03
+been tested in OSX (no PointGrey) and in Ubuntu 12.04.03 and 14.04.
+
+Ubuntu dependencies: [PointGrey libraries] libavutil-dev libavformat-dev libswscale-dev 
