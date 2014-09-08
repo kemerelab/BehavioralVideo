@@ -11,16 +11,19 @@
 //unsigned int registers[590];    //for dumping camera registers to
 
 PtGreyInterface::PtGreyInterface(QObject *parent) :
-    QObject(parent)
+    GenericCameraInterface(parent)
 {
-    isCapturing = false;
     serialNumber = 0;
 }
 
-void PtGreyInterface::Initialize(uint serialnumber)
+void PtGreyInterface::Initialize()
 {
     FlyCapture2::Error error;
     FlyCapture2::BusManager busMgr;
+
+    if (serialNumber == 0) {
+        qCritical() << "No cameras opened";
+    }
 
     unsigned int numCameras;
     error = busMgr.GetNumOfCameras(&numCameras);
@@ -34,7 +37,7 @@ void PtGreyInterface::Initialize(uint serialnumber)
     // Pick camera (change from first)
     if (numCameras >= 1) {
         FlyCapture2::PGRGuid guid;
-        error = busMgr.GetCameraFromSerialNumber(serialnumber, &guid);
+        error = busMgr.GetCameraFromSerialNumber(serialNumber, &guid);
         //error = busMgr.GetCameraFromIndex(0,&guid);
         if (error != FlyCapture2::PGRERROR_OK)
         {
@@ -77,8 +80,6 @@ void PtGreyInterface::Initialize(uint serialnumber)
         {
             error.PrintErrorTrace();
         }
-
-
 
         qDebug() <<
             "\n*** CAMERA INFORMATION ***" <<
@@ -131,10 +132,6 @@ void PtGreyInterface::Initialize(uint serialnumber)
             shutter.present = true;
 
             error = cam.SetProperty( &shutter, false );
-
-
-
-
             break;
         }
         case FlyCapture2::VIDEOMODE_FORMAT7:
@@ -173,11 +170,6 @@ void PtGreyInterface::ChangeTriggerPin(int pin){
     triggerMode.source = pin;
     triggerMode.mode = 0;
     cam.SetTriggerMode(&triggerMode,false);
-}
-
-void PtGreyInterface::InitializeVideoWriting(QString filename)
-{
-    emit initializeVideoWriting(filename + "_" + QString::number(serialNumber) + ".mp4");
 }
 
 void PtGreyInterface::FrameReceived(FlyCapture2::Image img)
@@ -226,17 +218,6 @@ void PtGreyInterface::StartCapture(bool enableTrigger)
     }
 }
 
-void PtGreyInterface::StartCameraCaptureSync()
-{
-    StartCapture(true);
-}
-
-void PtGreyInterface::StartCameraCaptureAsync()
-{
-    StartCapture(false);
-}
-
-
 void PtGreyInterface::StopCapture()
 {
     FlyCapture2::Error error;
@@ -252,18 +233,6 @@ void PtGreyInterface::StopCapture()
         qDebug() << "Stoping capture";
         emit capturingEnded();
     }
-}
-
-void PtGreyInterface::StopAndRestartCaptureSync()
-{
-    StopCapture();
-    StartCapture(true);
-}
-
-void PtGreyInterface::StopAndRestartCaptureAsync()
-{
-    StopCapture();
-    StartCapture(false);
 }
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData)
@@ -292,6 +261,26 @@ PtGreyInterface::~PtGreyInterface()
     if (isCapturing) {
         StopCapture();
     }
-    av_free(currentFrame_RAW);
-    av_free(currentFrame_RGB);
+}
+
+
+void FindPointGreyCameras(QStringList *cameraNameList)
+{
+    FlyCapture2::BusManager busMgr;
+    FlyCapture2::PGRGuid guid;
+    FlyCapture2::CameraInfo camInfo;
+    FlyCapture2::Camera cameralist[MAX_CAMERAS];
+    unsigned int x;
+    for (x=0; x<MAX_CAMERAS;x++)
+    {
+        if (busMgr.GetCameraFromIndex(x, &guid) != FlyCapture2::PGRERROR_OK)
+        {
+            break;
+        }
+        cameralist[x].Connect(&guid);
+        cameralist[x].GetCameraInfo(&camInfo);
+        cameraNameList->append(QString::number(camInfo.serialNumber));
+        qDebug() << "Camera found " << QString::number(camInfo.serialNumber);
+    }
+
 }

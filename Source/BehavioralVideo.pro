@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     fakecamerainterface.cpp \
     ptgreyinterface.cpp \
     dummycameracontroller.cpp \
-    serialcameracontroller.cpp
+    serialcameracontroller.cpp \
+    GenericCamera.cpp
 
 HEADERS  += mainwindow.h \
     videowidget.h \
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     ptgreyinterface.h \
     threads.h \
     dummycameracontroller.h \
-    serialcameracontroller.h
+    serialcameracontroller.h \
+    GenericCamera.h
 
 FORMS    += mainwindow.ui
 

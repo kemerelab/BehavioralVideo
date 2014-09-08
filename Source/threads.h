@@ -3,9 +3,9 @@
 
 #include <QThread>
 
-extern QThread pgThread0;
-extern QThread pgThread1;
-extern QThread cameraThread;
-extern QThread videoWriterThread;
+extern QThread cameraThread0;
+extern QThread cameraThread1;
+extern QThread videoWriterThread0;
+extern QThread videoWriterThread1;
 
 #endif // THREADS_H

@@ -2,7 +2,13 @@
 #include <QDebug>
 
 FakeVideoGenerator::FakeVideoGenerator(QObject *parent) :
-    QObject(parent)
+    GenericCameraInterface(parent)
+{
+    frameTimer = new QTimer(this);
+    QObject::connect(frameTimer, SIGNAL(timeout()), this, SLOT(GenerateNextFrame()));
+}
+
+void FakeVideoGenerator::Initialize()
 {
     width = 640;
     height = 480;
@@ -58,9 +64,13 @@ void FakeVideoGenerator::GenerateNextFrame(void) {
     frameIdx++;
 }
 
-void FakeVideoGenerator::StartVideo()
+void FakeVideoGenerator::StartCapture(bool enableStrobe)
 {
-    frameTimer = new QTimer(this);
-    QObject::connect(frameTimer, SIGNAL(timeout()), this, SLOT(GenerateNextFrame()));
     frameTimer->start(30);
 }
+
+void FakeVideoGenerator::StopCapture()
+{
+    frameTimer->stop();
+}
+

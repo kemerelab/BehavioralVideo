@@ -38,7 +38,7 @@
      <property name="title">
       <string>Open Camera</string>
      </property>
-     <addaction name="actionNo_Cameras_Found"/>
+     <addaction name="actionFakeCamera"/>
     </widget>
     <addaction name="separator"/>
     <addaction name="menuOpenCamera"/>
@@ -139,6 +139,11 @@
    </property>
    <property name="text">
     <string>Serial Controller</string>
+   </property>
+  </action>
+  <action name="actionFakeCamera">
+   <property name="text">
+    <string>Fake Camera</string>
    </property>
   </action>
  </widget>

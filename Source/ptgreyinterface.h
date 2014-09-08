@@ -6,13 +6,19 @@
 #include <FlyCapture2.h>
 #include <QImage>
 #include "videowriter.h"
+#include "GenericCamera.h"
+
+
+#define MAX_CAMERAS 10
 
 
 void OnImageGrabbed(FlyCapture2::Image* pImage, const void* pCallbackData);
 
+void FindPointGreyCameras(QStringList *cameraNameList);
+
 Q_DECLARE_METATYPE(FlyCapture2::Image);
 
-class PtGreyInterface : public QObject
+class PtGreyInterface : public GenericCameraInterface
 {
     Q_OBJECT
 public:
@@ -20,38 +26,19 @@ public:
      ~PtGreyInterface(void);
     bool isochStarted;
 
-
-signals:
-    void newFrame(QImage frame);
-    void capturingStarted(void);
-    void capturingEnded(void);
-    void initializeVideoWriting(QString filename);
-
-
 public slots:
-    void Initialize(uint serialnumber);
-    void InitializeVideoWriting(QString filename);
-    //void FrameReceived(void);
-    void FrameReceived(FlyCapture2::Image pImage);
+    void Initialize();
     void StartCapture(bool enableStrobe);
-    void StartCameraCaptureSync(void);
-    void StartCameraCaptureAsync(void);
     void StopCapture(void);
-    void StopAndRestartCaptureSync(void);
-    void StopAndRestartCaptureAsync(void);
+
+    void FrameReceived(FlyCapture2::Image pImage);
     void ChangeTriggerPin(int);
-
-
 public:
-    VideoWriter* videowriter;
-    int serialNumber;
-    bool initialized;
-
+    unsigned int serialNumber;
 
 private:
-    int width, height;
-    FlyCapture2::PixelFormat pixFmt;
-    QImage *currentFrame;
+    //FlyCapture2::PixelFormat pixFmt;
+    //PixelFormat vPixFmt;
 
     FlyCapture2::Image *pImage; //PtGrey format
     FlyCapture2::VideoMode videoMode;
@@ -61,23 +48,7 @@ private:
     FlyCapture2::Camera cam;
     FlyCapture2::TriggerMode triggerMode;
 
-    bool isCapturing;
     bool triggerEnabled;
-    PixelFormat vPixFmt;
-
-    FlyCapture2::StrobeControl strobeControl, edgeStrobeControl;
-
-    int lastGPIOPinState;
-
-    AVFrame *currentFrame_RAW;
-    void *currentFrame_RAW_buf;
-    AVFrame *currentFrame_RGB;
-    struct SwsContext *sws_ctx;
-
-
-signals:
-
-public slots:
 
 };
 

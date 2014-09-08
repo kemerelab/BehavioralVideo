@@ -13,8 +13,6 @@
 #include "dummycameracontroller.h"
 #include <QHash>
 
-#define MAX_CAMERAS 10
-
 namespace Ui {
 class MainWindow;
 }
@@ -27,8 +25,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    VideoGLWidget *videoWidget[10];
-    FakeVideoGenerator *fakeCamera;
     DummyCameraController *dummyController;
     SerialCameraController *serialController;
     QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
@@ -39,7 +35,9 @@ public:
 public slots:
     void openSerialController(void);
     void openDummyController(void);
-    void openPGCamera(int);
+    void openFakeVideo();
+    void openPGCamera(int serialNumber);
+    void openCamera(GenericCameraInterface *camera);
     void selectPin(QString);
 
     void updateVideoSavingMenus(bool writing);
@@ -58,9 +56,6 @@ public slots:
     void restartCaptureSync();
 
     void resetSavingMenus();
-    //void openPtGreyCamera(FlyCapture2::PGRGuid guid);
-    void openFakeVideo();
-    void countFrames(QImage);
 
 signals:
     //void initializeController(QString portname);
@@ -84,7 +79,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
-    int frameCount;
     QString name;
 
     enum SavingState {

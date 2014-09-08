@@ -1,30 +1,30 @@
-#ifndef CAMERAINTERFACE_H
-#define CAMERAINTERFACE_H
+#ifndef FAKECAMERAINTERFACE_H
+#define FAKECAMERAINTERFACE_H
 
 #include <QObject>
 #include <QImage>
 #include <QTimer>
 #include "ffmpeg.h"
+#include "GenericCamera.h"
 
-class FakeVideoGenerator : public QObject
+class FakeVideoGenerator : public GenericCameraInterface
 {
     Q_OBJECT
 public:
     explicit FakeVideoGenerator(QObject *parent = 0);
     ~FakeVideoGenerator(void);
 
-signals:
-    void newFrame(QImage frame);
 
 public slots:
     void GenerateNextFrame(void);
-    void StartVideo(void);
+    void Initialize(void);
+    void StartCapture(bool enableStrobe);
+    void StopCapture(void);
 
 public:
 
 private:
     QTimer *frameTimer;
-    int width, height;
     int frameIdx;
     QImage *currentFrame;
     AVFrame *currentFrame_YUV;
@@ -33,4 +33,4 @@ private:
     struct SwsContext *sws_ctx;
 };
 
-#endif // CAMERAINTERFACE_H
+#endif // FAKECAMERAINTERFACE_H
