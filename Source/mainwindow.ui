@@ -20,14 +20,29 @@
      <x>0</x>
      <y>0</y>
      <width>678</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuOpenController">
+     <property name="title">
+      <string>Open Controller</string>
+     </property>
+     <addaction name="actionDummyController"/>
+     <addaction name="actionSerialController"/>
+    </widget>
+    <widget class="QMenu" name="menuOpenCamera">
+     <property name="title">
+      <string>Open Camera</string>
+     </property>
+     <addaction name="actionNo_Cameras_Found"/>
+    </widget>
     <addaction name="separator"/>
+    <addaction name="menuOpenCamera"/>
+    <addaction name="menuOpenController"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
    </widget>
@@ -40,7 +55,6 @@
     <addaction name="actionStop"/>
     <addaction name="separator"/>
     <addaction name="actionConfigure"/>
-    <addaction name="actionTimedCapture"/>
    </widget>
    <widget class="QMenu" name="menuCamera">
     <property name="title">
@@ -99,6 +113,32 @@
   <action name="actionTimedCapture">
    <property name="text">
     <string>TimedCapture</string>
+   </property>
+  </action>
+  <action name="actionNo_Cameras_Found">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>No Cameras Found</string>
+   </property>
+   <property name="font">
+    <font>
+     <italic>true</italic>
+    </font>
+   </property>
+  </action>
+  <action name="actionDummyController">
+   <property name="text">
+    <string>Dummy Controller</string>
+   </property>
+  </action>
+  <action name="actionSerialController">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Serial Controller</string>
    </property>
   </action>
  </widget>

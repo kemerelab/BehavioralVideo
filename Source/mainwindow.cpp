@@ -29,64 +29,19 @@ MainWindow::MainWindow(QWidget *parent) :
     numCamerasReadyToWrite = 0;
     numCamerasInitialized = 0;
     numCamerasCapturing = 0;
-    foundController = false;
+    dummyControllerSelected = false;
     bool firmware = false;
     bool hardware = false;
 
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-
-          if (info.description().left(17) == "Camera Controller"){
-
-                 foundController = true;
-
-                 //check for correct PCB and Firmware
-
-                 if (info.description().mid(18,7) == "PCB 1.0"){
-
-                     hardware = true;
-                 }
-                 if (info.description().mid(26,7) == "F W 1.0"){
-                     firmware = true;
-                 }
-                 if (hardware && firmware){
-                     openController(info.description());
-                 }
-
-                 break;
-           }
+    // Build Controller Menu
+    connect(ui->actionDummyController, SIGNAL(triggered()), this,SLOT(openDummyController()));
+    if (isSerialControllerConnected()) {
+        ui->actionSerialController->setEnabled(true);
+        connect(ui->actionSerialController, SIGNAL(triggered()),this,SLOT(openSerialController()));
     }
-       if (foundController == false){
-
-           QErrorMessage errorMessage;
-           errorMessage.showMessage("Controller not found. Saving disabled");
-           ui->actionOpenVideoFile->setDisabled(true);
-           errorMessage.exec();
-       }
-       else if (!hardware && !firmware){
-           QErrorMessage errorMessage;
-           errorMessage.showMessage("Controller hardware and firmware outdated. Saving disabled");
-           ui->actionOpenVideoFile->setDisabled(true);
-           errorMessage.exec();
-       }
-       else if (!hardware){
-           QErrorMessage errorMessage;
-           errorMessage.showMessage("Controller hardware outdated. Saving disabled");
-           ui->actionOpenVideoFile->setDisabled(true);
-           errorMessage.exec();
-       }
-       else if (!firmware){
-           QErrorMessage errorMessage;
-           errorMessage.showMessage("Controller firmware outdated. Saving disabled");
-           ui->actionOpenVideoFile->setDisabled(true);
-           errorMessage.exec();
-       }
-
 
     //detect cameras and add to menu
-
     cameraMapper = new QSignalMapper(this);
-    cameraMenu = new QMenu("Open Camera");
-
     FlyCapture2::BusManager busMgr;
     FlyCapture2::PGRGuid guid;
     FlyCapture2::CameraInfo camInfo;
@@ -94,7 +49,6 @@ MainWindow::MainWindow(QWidget *parent) :
     unsigned int x;
     for (x=0; x<MAX_CAMERAS;x++)
     {
-
         if (busMgr.GetCameraFromIndex(x, &guid) != FlyCapture2::PGRERROR_OK)
         {
             break;
@@ -102,13 +56,16 @@ MainWindow::MainWindow(QWidget *parent) :
         cameralist[x].Connect(&guid);
         cameralist[x].GetCameraInfo(&camInfo);
         QAction *action = new QAction("Point Grey " + QString::number(camInfo.serialNumber),this);
-        cameraMenu->addAction(action);
+        ui->menuOpenCamera->addAction(action);
         connect(action, SIGNAL(triggered()),cameraMapper,SLOT(map()));
         cameraMapper->setMapping(action,camInfo.serialNumber);
     }
 
+    if (x > 0) { // cameras found!
+        ui->menuOpenCamera->removeAction(ui->actionNo_Cameras_Found);
+    }
+
     connect(cameraMapper,SIGNAL(mapped(int)),this,SLOT(openPGCamera(int)));
-    ui->menuFile->insertMenu(ui->actionQuit,cameraMenu);
 
     ui->centralWidget->setLayout(layout);
 
@@ -140,6 +97,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
 
 void MainWindow::openVideoFile()
 {
@@ -286,24 +244,41 @@ void MainWindow::aggregateVideoCaptureEnded()
     }
 }
 
-void MainWindow::openController(QString name)
+void MainWindow::openSerialController()
 {
 
     qDebug()<< "Initializing Controller";
-    serial = new Serial;
-    serial->connect(name);
+    serialController = new SerialCameraController;
+    if (serialController->connect(name) != 0)
+    {
+        qDebug() << "Error opening controller";
+        ui->actionSerialController->setDisabled(true);
+        return;
+    }
+    connect(this, SIGNAL(videoCaptureStartedSync()), serialController, SLOT(startTriggerNoSync()));
+    connect(serialController, SIGNAL(triggersStarted(bool)), this, SLOT(updateVideoSavingMenus(bool)));
 
-    connect(this, SIGNAL(videoCaptureStartedSync()), serial, SLOT(startTriggerNoSync()));
-    connect(serial, SIGNAL(triggersStarted(bool)), this, SLOT(updateVideoSavingMenus(bool)));
-
-    connect(ui->actionRecord, SIGNAL(triggered()), serial, SLOT(stopTrigger()));
-    connect(ui->actionStop, SIGNAL(triggered()), serial, SLOT(stopTrigger()));
-    connect(serial, SIGNAL(triggersStopped()), this, SLOT(controlVideoWriter()));
+    connect(ui->actionRecord, SIGNAL(triggered()), serialController, SLOT(stopTrigger()));
+    connect(ui->actionStop, SIGNAL(triggered()), serialController, SLOT(stopTrigger()));
+    connect(serialController, SIGNAL(triggersStopped()), this, SLOT(controlVideoWriter()));
     // video writing signals get aggregated into videoWritingStarted - this is our signal to start triggers again
-    connect(this, SIGNAL(videoWritingStarted()), serial, SLOT(startTriggerSync()));
+    connect(this, SIGNAL(videoWritingStarted()), serialController, SLOT(startTriggerSync()));
+}
 
+void MainWindow::openDummyController()
+{
+    dummyController = new DummyCameraController;
+    connect(this, SIGNAL(videoCaptureStartedSync()), dummyController, SLOT(startTriggerNoSync()));
+    connect(dummyController, SIGNAL(triggersStarted(bool)), this, SLOT(updateVideoSavingMenus(bool)));
+
+    connect(ui->actionRecord, SIGNAL(triggered()), dummyController, SLOT(stopTrigger()));
+    connect(ui->actionStop, SIGNAL(triggered()), dummyController, SLOT(stopTrigger()));
+    connect(dummyController, SIGNAL(triggersStopped()), this, SLOT(controlVideoWriter()));
+    // video writing signals get aggregated into videoWritingStarted - this is our signal to start triggers again
+    connect(this, SIGNAL(videoWritingStarted()), dummyController, SLOT(startTriggerSync()));
 
 }
+
 
 void MainWindow::openPGCamera(int serialnumber)
 {
@@ -316,10 +291,10 @@ void MainWindow::openPGCamera(int serialnumber)
 
     //remove menu item and replace with disabled dummy
     if (initialized == false){
-        cameraMenu->removeAction(((QAction *)cameraMapper->mapping(serialnumber)));
+        ui->menuOpenCamera->removeAction(((QAction *)cameraMapper->mapping(serialnumber)));
         QAction *tempaction = new QAction("Point Grey " + QString::number(serialnumber),this);
         tempaction->setDisabled(true);
-        cameraMenu->addAction(tempaction);
+        ui->menuOpenCamera->addAction(tempaction);
 
 
         //add camera to camer menu

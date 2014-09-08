@@ -9,7 +9,8 @@
 #include "ptgreyinterface.h"
 #include "fakecamerainterface.h"
 #include <QSerialPort>
-#include "serial.h"
+#include "serialcameracontroller.h"
+#include "dummycameracontroller.h"
 #include <QHash>
 
 #define MAX_CAMERAS 10
@@ -27,17 +28,17 @@ public:
     ~MainWindow();
 
     VideoGLWidget *videoWidget[10];
-    //int cameraIndex;
-    //PtGreyInterface *pgCamera[10];
     FakeVideoGenerator *fakeCamera;
-    Serial* serial;
+    DummyCameraController *dummyController;
+    SerialCameraController *serialController;
     QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
     uint widgetx;
     uint widgety;
     uint numCameras;
 
 public slots:
-    void openController(QString);
+    void openSerialController(void);
+    void openDummyController(void);
     void openPGCamera(int);
     void selectPin(QString);
 
@@ -95,14 +96,14 @@ private:
     uint numCamerasReadyToWrite;
     uint numCamerasInitialized;
     uint numCamerasCapturing;
-    bool foundController;
+    bool dummyControllerSelected;
     enum CameraState {
         SYNC,
         ASYNC
     };
     CameraState cameraState;
     QSignalMapper* cameraMapper;
-    QMenu *cameraMenu;
+    QSignalMapper* controllerMapper;
 };
 
 #endif // MAINWINDOW_H

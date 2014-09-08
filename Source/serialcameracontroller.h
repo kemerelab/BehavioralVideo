@@ -4,14 +4,17 @@
 #include <QDebug>
 #include "threads.h"
 
-class Serial : public QObject
+
+bool isSerialControllerConnected();
+
+class SerialCameraController : public QObject
 {
     Q_OBJECT
 public:
     QString portname;
     QSerialPort port;
-    ~Serial();
-    void connect(QString portname);
+    ~SerialCameraController();
+    int connect(QString portname);
 
 public slots:
     void startTrigger(bool syncState);
