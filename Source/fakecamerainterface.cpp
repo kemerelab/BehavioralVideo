@@ -30,6 +30,9 @@ void FakeVideoGenerator::Initialize()
     avpicture_fill((AVPicture*)currentFrame_RGB, currentFrame->bits(), PIX_FMT_RGB24, width, height);
 
     frameIdx = 0;
+
+    isInitialized = true;
+
 }
 
 FakeVideoGenerator::~FakeVideoGenerator(void) {
@@ -66,11 +69,15 @@ void FakeVideoGenerator::GenerateNextFrame(void) {
 
 void FakeVideoGenerator::StartCapture(bool enableStrobe)
 {
+    qDebug() << "Fake camera start. Camera " << cameraName;
     frameTimer->start(30);
+    emit capturingStarted();
 }
 
 void FakeVideoGenerator::StopCapture()
 {
+    qDebug() << "Fake camera stop. Camera " << cameraName;
     frameTimer->stop();
+    emit capturingEnded();
 }
 

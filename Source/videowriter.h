@@ -49,4 +49,7 @@ private:
     int video_outbuf_size;
 };
 
+Q_DECLARE_METATYPE(VideoWriter*)
+
+
 #endif // VIDEOWRITER_H

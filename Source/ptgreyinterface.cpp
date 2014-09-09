@@ -164,6 +164,9 @@ void PtGreyInterface::Initialize()
 
     }
 
+    cameraName = QString::number(serialNumber);
+    isInitialized = true;
+
 }
 
 void PtGreyInterface::ChangeTriggerPin(int pin){

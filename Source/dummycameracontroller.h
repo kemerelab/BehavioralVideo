@@ -2,8 +2,9 @@
 #define DUMMYCAMERACONTROLLER_H
 
 #include <QObject>
+#include "GenericCameraController.h"
 
-class DummyCameraController : public QObject
+class DummyCameraController : public GenericCameraController
 {
     Q_OBJECT
 public:
@@ -16,9 +17,11 @@ signals:
 
 public slots:
     void startTrigger(bool syncState);
-    void startTriggerNoSync(void);
-    void startTriggerSync(void);
     void stopTrigger(void);
+
+    //void savingStateMachine(void);
+
+
 };
 
 #endif // DUMMYCAMERACONTROLLER_H

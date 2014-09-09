@@ -2,39 +2,29 @@
 #include <QDebug>
 
 DummyCameraController::DummyCameraController(QObject *parent) :
-    QObject(parent)
+    GenericCameraController(parent)
 {
 
 }
 
 void DummyCameraController::stopTrigger()
 {
-    emit triggersStopped();
+    emit triggerStopped();
 }
 
 void DummyCameraController::startTrigger(bool syncState) {
     if (syncState) {
-        emit triggersStarted(true);
+        emit triggerStarted(true);
         qDebug() << "triggers started true";
     }
     else {
-        emit triggersStarted(false);
+        emit triggerStarted(false);
         qDebug() << "triggers started false";
     }
-}
-
-void DummyCameraController::startTriggerNoSync() {
-    startTrigger(false);
-    qDebug() << "starting trigger false";
-}
-
-void DummyCameraController::startTriggerSync() {
-    startTrigger(true);
-    qDebug() << "starting trigger true";
+    emit triggerStarted();
 }
 
 DummyCameraController::~DummyCameraController()
 {
 
 }
-

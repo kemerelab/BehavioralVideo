@@ -3,14 +3,15 @@
 #include <QSignalMapper>
 #include <QMainWindow>
 #include <QGridLayout>
+#include "datacontroller.h"
 #include "videowidget.h"
 #include "videoglwidget.h"
 #include "videowriter.h"
 #include "ptgreyinterface.h"
 #include "fakecamerainterface.h"
 #include <QSerialPort>
-#include "serialcameracontroller.h"
-#include "dummycameracontroller.h"
+#include "GenericCameraController.h"
+
 #include <QHash>
 
 namespace Ui {
@@ -24,9 +25,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    GenericCameraController *controller;
 
-    DummyCameraController *dummyController;
-    SerialCameraController *serialController;
     QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
     uint widgetx;
     uint widgety;
@@ -35,25 +35,15 @@ public:
 public slots:
     void openSerialController(void);
     void openDummyController(void);
+    void openController();
     void openFakeVideo();
     void openPGCamera(int serialNumber);
     void openCamera(GenericCameraInterface *camera);
     void selectPin(QString);
 
-    void updateVideoSavingMenus(bool writing);
-    void controlVideoWriter();
+    void updateVideoMenus(SavingState state);
 
     void openVideoFile();
-    void aggregateVideoWritingInitialized();
-    void aggregateVideoWritingStarted();
-    void aggregateVideoWritingEnded();
-    void aggregateVideoCaptureStarted();
-    void aggregateVideoCaptureEnded();
-
-    void startCaptureAsync();
-    void startCaptureSync();
-    void restartCaptureAsync();
-    void restartCaptureSync();
 
     void resetSavingMenus();
 
@@ -75,27 +65,24 @@ signals:
 
 private slots:
 
-
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
     QString name;
 
-    enum SavingState {
-        NOT_SAVING,
-        READY_TO_WRITE,
-        CURRENTLY_WRITING
-    };
+    DataController *dataController;
     SavingState savingState;
     uint numCamerasReadyToWrite;
     uint numCamerasInitialized;
     uint numCamerasCapturing;
-    bool dummyControllerSelected;
+    bool controllerInitialized;
     enum CameraState {
         SYNC,
         ASYNC
     };
     CameraState cameraState;
+    TriggerType triggerType;
+
     QSignalMapper* cameraMapper;
     QSignalMapper* controllerMapper;
 };

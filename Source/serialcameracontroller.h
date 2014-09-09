@@ -1,14 +1,15 @@
-#include <QThread>
+#ifndef SERIAL_CAMERA_CONTROLLER_H
+#define SERIAL_CAMERA_CONTROLLER_H
+
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
-#include <QDebug>
-#include "threads.h"
-
+#include "GenericCameraController.h"
 
 bool isSerialControllerConnected();
 
-class SerialCameraController : public QObject
+class SerialCameraController : public GenericCameraController
 {
+
     Q_OBJECT
 public:
     QString portname;
@@ -18,12 +19,10 @@ public:
 
 public slots:
     void startTrigger(bool syncState);
-    void startTriggerNoSync(void);
-    void startTriggerSync(void);
     void stopTrigger(void);
 
 signals:
-    void triggersStopped(void);
-    void triggersStarted(bool syncState);
 
 };
+
+#endif

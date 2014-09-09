@@ -1,8 +1,6 @@
 
 
 #include "mainwindow.h"
-#include "fakecamerainterface.h"
-#include "videoglwidget.h"
 #include <QApplication>
 #include <QThread>
 #include <QTimer>
@@ -20,6 +18,7 @@ QThread cameraThread0;
 QThread cameraThread1;
 QThread videoWriterThread0;
 QThread videoWriterThread1;
+QThread dataControllerThread;
 
 int main(int argc, char *argv[])
 {
@@ -30,12 +29,15 @@ int main(int argc, char *argv[])
     cameraThread1.start();
     videoWriterThread0.start();
     videoWriterThread1.start();
+    dataControllerThread.start();
+
 
     MainWindow w;
     QObject::connect(&w, SIGNAL(destroyed()), &cameraThread0, SLOT(quit()));
     QObject::connect(&w, SIGNAL(destroyed()), &cameraThread1, SLOT(quit()));
     QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread0, SLOT(quit()));
     QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread1, SLOT(quit()));
+    QObject::connect(&w, SIGNAL(destroyed()), &dataControllerThread, SLOT(quit()));
 
     w.show();
     return a.exec();

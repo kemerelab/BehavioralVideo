@@ -1,5 +1,5 @@
 #include "serialcameracontroller.h"
-#include <QThread>
+#include <QDebug>
 
 bool isSerialControllerConnected()
 {
@@ -58,35 +58,26 @@ int SerialCameraController::connect(QString portname)
 void SerialCameraController::stopTrigger()
 {
     port.write("\r");
-    emit triggersStopped();
+    emit triggerStopped();
 }
 
 void SerialCameraController::startTrigger(bool syncState) {
     if (syncState) {
         port.write("all\r");
-        emit triggersStarted(true);
+        emit triggerStarted(true);
         qDebug() << "triggers started true";
     }
     else {
         port.write("cam\r");
         qDebug() << "cam enabled";
-        emit triggersStarted(false);
+        emit triggerStarted(false);
         qDebug() << "triggers started false";
     }
-}
-
-void SerialCameraController::startTriggerNoSync() {
-    startTrigger(false);
-    qDebug() << "starting trigger false";
-}
-
-void SerialCameraController::startTriggerSync() {
-    startTrigger(true);
-    qDebug() << "starting trigger true";
+    emit triggerStarted();
 }
 
 SerialCameraController::~SerialCameraController()
 {
-
+    port.close();
 }
 

@@ -19,12 +19,6 @@ GenericCameraInterface::GenericCameraInterface(QObject *parent) :
     cameraName = "";
 }
 
-void GenericCameraInterface::InitializeVideoWriting(QString filename)
-{
-    if (isInitialized)
-        emit initializeVideoWriting(filename + "_" + cameraName + ".mp4");
-}
-
 GenericCameraInterface::~GenericCameraInterface()
 {
 }
