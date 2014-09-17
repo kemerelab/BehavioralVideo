@@ -29,7 +29,6 @@ void VideoGLWidget::initialize() {
 
 void VideoGLWidget::render()
 {
-
     glViewport(0, 0, width(), height());
 
     glClearColor(0.4f, 0.1f, 0.1f, 1.0f);

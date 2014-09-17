@@ -25,11 +25,16 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     //qDebug() << "Thread for main: " << QThread::currentThreadId();
 
+    cameraThread0.setObjectName("Camera0Thread");
     cameraThread0.start();
+    cameraThread1.setObjectName("Camera1Thread");
     cameraThread1.start();
     videoWriterThread0.start();
+    videoWriterThread0.setObjectName("VideoWriter0Thread");
     videoWriterThread1.start();
+    videoWriterThread1.setObjectName("VideoWriter1Thread");
     dataControllerThread.start();
+    dataControllerThread.setObjectName("DataControllerThread");
 
 
     MainWindow w;
