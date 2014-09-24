@@ -17,6 +17,7 @@ VideoWriter::VideoWriter(QObject *parent) :
 void VideoWriter::initialize(QString filename)
 {
 
+    filename = filename + QString(".mp4");
     qDebug() << "Initializing writing to " << filename;
 
     vFilename = &filename;

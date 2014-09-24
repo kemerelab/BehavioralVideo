@@ -83,6 +83,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     savingState = NOT_SAVING;
     cameraState = ASYNC;
+
+    VideoGLWidget *videoWidget = new VideoGLWidget();
+    videoWidget->setSurfaceType(QSurface::OpenGLSurface);
+    videoWidget->create();
+    qRegisterMetaType<VideoGLWidget*>("VideoGLWidget*");
+    QMetaObject::invokeMethod(dataController, "registerVideoWidget", Qt::QueuedConnection,
+                              Q_ARG(VideoGLWidget*, videoWidget));
+
+    QWidget *container = QWidget::createWindowContainer(videoWidget);
+    layout->addWidget(container,0,0);
 }
 
 MainWindow::~MainWindow()
@@ -257,44 +267,18 @@ void MainWindow::openFakeVideo()
 
 void MainWindow::openCamera(GenericCameraInterface *camera)
 {
+    QMetaObject::invokeMethod(dataController, "stopVideo", Qt::QueuedConnection);
 
-    VideoWriter *videoWriter = new VideoWriter();
-
-    if (numCameras == 1){
+    if (numCameras == 1){ // we already have opened one camera!
         camera->moveToThread(&cameraThread1);
-        //videoWriter->moveToThread(&videoWriterThread1);
     }
     else{
         camera->moveToThread(&cameraThread0);
-        //videoWriter->moveToThread(&videoWriterThread0);
     }
-
-    videoWriter->moveToThread(&videoWriterThread0);
 
     qRegisterMetaType<GenericCameraInterface*>("GenericCameraInterface*");
-    qRegisterMetaType<VideoWriter*>("VideoWriter*");
-
-    QMetaObject::invokeMethod(dataController, "registerCameraAndWriter", Qt::QueuedConnection, Q_ARG(GenericCameraInterface*, camera),
-                              Q_ARG(VideoWriter*, videoWriter));
-
-    VideoGLWidget *videoWidget = new VideoGLWidget();
-    videoWidget->setSurfaceType(QSurface::OpenGLSurface);
-    videoWidget->create();
-    QWidget *container = QWidget::createWindowContainer(videoWidget);
-
-    if (((float)widgetx*(float)4)/((float)widgety*(float)3) < (float)16/(float)9){
-        widgetx++;
-    }
-    else
-    {
-        widgety++;
-        widgetx = 1;
-    }
-
-    layout->addWidget(container,widgety,widgetx);
-
-    QObject::connect(camera, SIGNAL(newFrame(QImage)),videoWidget, SLOT(newFrame(QImage)));
-    QObject::connect(camera, SIGNAL(newFrame(QImage)),videoWriter, SLOT(newFrame(QImage)));
+    QMetaObject::invokeMethod(dataController, "registerCamera",
+                              Qt::QueuedConnection, Q_ARG(GenericCameraInterface*, camera));
 
     //cameraInterfaces.insert(serialNumber,pgCamera);
     QMetaObject::invokeMethod(camera, "Initialize", Qt::QueuedConnection);

@@ -85,6 +85,7 @@ private:
 
     QSignalMapper* cameraMapper;
     QSignalMapper* controllerMapper;
+
 };
 
 #endif // MAINWINDOW_H

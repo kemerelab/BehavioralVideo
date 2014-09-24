@@ -4,7 +4,9 @@
 #include "GenericCamera.h"
 #include "GenericCameraController.h"
 #include "videowriter.h"
+#include "videoglwidget.h"
 #include <QList>
+#include <QPainter>
 
 enum TriggerType {
     NO_SELECTION,
@@ -29,6 +31,7 @@ public:
 
 signals:
     void updateSavingMenus(SavingState);
+    void newFrame(QImage);
 
 public slots:
     void stopVideo(void);
@@ -38,16 +41,29 @@ public slots:
     void startVideoRecording(void) { startVideoStreaming(true); }
     void startVideoViewing(void) { startVideoStreaming(false); }
     void useTriggering(TriggerType trigger) { triggerType = trigger; }
-    void registerCameraAndWriter(GenericCameraInterface *camera, VideoWriter *writer);
+    void registerCamera(GenericCameraInterface *camera);
     void registerCameraController(GenericCameraController *controller);
+    void registerVideoWidget(VideoGLWidget *videoWidget);
+    void newLeftFrame(QImage);
+    void newRightFrame(QImage);
 
 private:
     QList<GenericCameraInterface *> cameraList;
     QList<VideoWriter *> videoWriterList;
     GenericCameraController *cameraController;
+    VideoGLWidget *videoWidget;
     int numCameras;
     TriggerType triggerType;
     bool videoIsStreaming;
+    QImage *concatenatingFrame;
+    bool concatenatingFrameInitialized;
+    QPainter *concatenationPainter;
+    enum FrameConcatenationState {
+        NOT_STARTED,
+        LEFT_READY,
+        RIGHT_READY
+    };
+    FrameConcatenationState frameConcatenationState;
 
 };
 
