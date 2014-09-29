@@ -36,6 +36,8 @@ void DataController::stopVideoWriting()
     for (int i = 0; i < videoWriterList.length(); i++) {
         QMetaObject::invokeMethod(videoWriterList.at(i), "endWriting", Qt::BlockingQueuedConnection);
     }
+    QMetaObject::invokeMethod(cameraController, "endWriting", Qt::BlockingQueuedConnection);
+
     startVideoStreaming(false);
     emit updateSavingMenus(NOT_SAVING);
 
@@ -44,13 +46,9 @@ void DataController::stopVideoWriting()
 
 void DataController::initializeVideoWriting(QString filename)
 {
-    /*
-    for (int i = 0; i < numCameras; i++) {
-        QMetaObject::invokeMethod(videoWriterList.at(i), "initialize", Qt::BlockingQueuedConnection,
-                                  Q_ARG(QString, (QString)(filename + cameraList.at(i)->cameraName)));
-    }
-    */
     QMetaObject::invokeMethod(videoWriterList.at(0), "initialize", Qt::BlockingQueuedConnection,
+                              Q_ARG(QString, (QString)(filename)));
+    QMetaObject::invokeMethod(cameraController, "initializeLogFile", Qt::BlockingQueuedConnection,
                               Q_ARG(QString, (QString)(filename)));
     emit updateSavingMenus(READY_TO_WRITE);
 }
@@ -64,12 +62,20 @@ void DataController::startVideoStreaming(bool writeToDisk)
             QMetaObject::invokeMethod(videoWriterList.at(i), "beginWriting", Qt::BlockingQueuedConnection);
         }
 
+        QMetaObject::invokeMethod(cameraController, "beginWriting", Qt::BlockingQueuedConnection);
+
     }
     if ((cameraController != NULL) && (triggerType == EXTERNAL_CAMERA_TRIGGER)) {
-        QMetaObject::invokeMethod(cameraController, "startTriggerSync", Qt::BlockingQueuedConnection);
+        if (writeToDisk) {
+            QMetaObject::invokeMethod(cameraController, "startTriggerSync", Qt::BlockingQueuedConnection);
+        }
+        else {
+            QMetaObject::invokeMethod(cameraController, "startTriggerNoSync", Qt::BlockingQueuedConnection);
+        }
         for (int i = 0; i < numCameras; i++) {
             QMetaObject::invokeMethod(cameraList.at(i), "StartCameraCaptureSync", Qt::BlockingQueuedConnection);
         }
+
     }
     else if ((triggerType == NO_CAMERA_TRIGGER) || (cameraController == NULL)) {
         for (int i = 0; i < numCameras; i++) {
@@ -116,7 +122,7 @@ void DataController::registerCamera(GenericCameraInterface *camera)
 void DataController::registerCameraController(GenericCameraController *controller)
 {
     cameraController = controller;
-    qDebug() << "Camera controller registered ";
+    qDebug() << "Camera controller registered";
 }
 
 void DataController::registerVideoWidget(VideoGLWidget *_videoWidget)

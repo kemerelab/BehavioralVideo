@@ -1,9 +1,10 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "serialcameracontroller.h"
 #include "threads.h"
 #include "dummycameracontroller.h"
+#include "MazeController.h"
+#include "MazeInfoWindow.h"
 
 #include <QThread>
 #include <QTimer>
@@ -37,12 +38,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Build Controller Menu
     connect(ui->actionDummyController, SIGNAL(triggered()), this,SLOT(openDummyController()));
-    if (isSerialControllerConnected()) {
-        ui->actionSerialController->setEnabled(true);
-        ui->actionSerialController->setChecked(false);
-        ui->actionSerialController->setEnabled(true);
+    if (isMazeControllerConnected()) {
+        ui->actionMazeController->setEnabled(true);
+        ui->actionMazeController->setChecked(false);
+        ui->actionMazeController->setEnabled(true);
 
-        connect(ui->actionSerialController, SIGNAL(triggered()),this,SLOT(openSerialController()));
+        connect(ui->actionMazeController, SIGNAL(triggered()),this,SLOT(openMazeController()));
     }
 
     connect(ui->actionFakeCamera,SIGNAL(triggered()),this,SLOT(openFakeVideo()));
@@ -91,8 +92,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QMetaObject::invokeMethod(dataController, "registerVideoWidget", Qt::QueuedConnection,
                               Q_ARG(VideoGLWidget*, videoWidget));
 
-    QWidget *container = QWidget::createWindowContainer(videoWidget);
+    QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
     layout->addWidget(container,0,0);
+
 }
 
 MainWindow::~MainWindow()
@@ -174,20 +176,42 @@ void MainWindow::resetSavingMenus()
     qDebug() << "menus reset";
 }
 
-void MainWindow::openSerialController()
-{
+
+void MainWindow::openMazeController()
+{    
+    MazeInfoWindow *mazeInfoWindow = new MazeInfoWindow(this);
+    addDockWidget(Qt::RightDockWidgetArea,mazeInfoWindow);
+
     qDebug()<< "Initializing Controller";
-    controller = new SerialCameraController;
-    if (((SerialCameraController *)controller)->connect(name) != 0)
+    controller = new MazeController;
+    controller->moveToThread(&cameraControllerThread);
+    int error;
+    QMetaObject::invokeMethod((MazeController *)controller, "connectToPort", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(int, error),
+                              Q_ARG(QString, name));
+
+    if (error != 0)
     {
         qDebug() << "Error opening controller";
-        ui->actionSerialController->setDisabled(true);
+        ui->actionMazeController->setDisabled(true);
         return;
     }
 
+    connect((MazeController *)controller, SIGNAL(serialDataReceived(QByteArray)),
+            mazeInfoWindow, SLOT(newLogText(QByteArray)));
+    connect((MazeController *)controller, SIGNAL(statusMessageReceived(QString)),
+            mazeInfoWindow, SLOT(newStatusMessage(QString)));
+    connect((MazeController *)controller, SIGNAL(frameTimestampEvent(ulong,ulong)),
+            mazeInfoWindow, SLOT(newFrameTimestampEvent(ulong,ulong)));
+    connect((MazeController *)controller, SIGNAL(wellVisitEvent(ulong,char)),
+            mazeInfoWindow, SLOT(newWellVisitEvent(ulong,char)));
+    connect((MazeController *)controller, SIGNAL(wellRewardEvent(ulong,char,int,int)),
+            mazeInfoWindow, SLOT(newWellRewardEvent(ulong,char,int,int)));
+
     triggerType = EXTERNAL_CAMERA_TRIGGER;
     openController();
-    ui->actionDummyController->setChecked(true);
+    ui->actionMazeController->setChecked(true);
+    ui->actionMazeController->setDisabled(true);
 }
 
 void MainWindow::openDummyController()
@@ -202,12 +226,13 @@ void MainWindow::openController()
 {
     controllerInitialized = true;
     qRegisterMetaType<GenericCameraController*>("GenericCameraController*");
-
     QMetaObject::invokeMethod(dataController, "registerCameraController", Qt::QueuedConnection,
                               Q_ARG(GenericCameraController*, controller));
+
     qRegisterMetaType<TriggerType>("TriggerType");
     QMetaObject::invokeMethod(dataController, "useTriggering", Qt::QueuedConnection, Q_ARG(TriggerType, triggerType));
     ui->actionOpenVideoFile->setEnabled(true);
+
 }
 
 void MainWindow::openPGCamera(int serialNumber)

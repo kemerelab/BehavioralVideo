@@ -28,10 +28,11 @@ SOURCES += main.cpp\
     fakecamerainterface.cpp \
     ptgreyinterface.cpp \
     dummycameracontroller.cpp \
-    serialcameracontroller.cpp \
     GenericCamera.cpp \
     GenericCameraController.cpp \
-    datacontroller.cpp
+    datacontroller.cpp \
+    MazeController.cpp \
+    MazeInfoWindow.cpp
 
 HEADERS  += mainwindow.h \
     videowidget.h \
@@ -42,10 +43,11 @@ HEADERS  += mainwindow.h \
     ptgreyinterface.h \
     threads.h \
     dummycameracontroller.h \
-    serialcameracontroller.h \
     GenericCamera.h \
     GenericCameraController.h \
-    datacontroller.h
+    datacontroller.h \
+    MazeController.h \
+    MazeInfoWindow.h
 
 FORMS    += mainwindow.ui
 

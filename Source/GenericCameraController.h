@@ -17,11 +17,11 @@ public slots:
     virtual void startTriggerNoSync(void) { startTrigger(false); };
     virtual void startTriggerSync(void) { startTrigger(true); };
     virtual void stopTrigger(void) = 0;
+    virtual void initializeLogFile(QString filename) { };
+    virtual void beginWriting(void) { };
+    virtual void endWriting(void) { };
 
 signals:
-    void triggerStarted(void);
-    void triggerStopped(void);
-    void triggerStarted(bool);
 
 public:
     int numCameras;

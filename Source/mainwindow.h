@@ -11,6 +11,7 @@
 #include "fakecamerainterface.h"
 #include <QSerialPort>
 #include "GenericCameraController.h"
+#include "MazeInfoWindow.h"
 
 #include <QHash>
 
@@ -33,7 +34,7 @@ public:
     uint numCameras;
 
 public slots:
-    void openSerialController(void);
+    void openMazeController(void);
     void openDummyController(void);
     void openController();
     void openFakeVideo();
@@ -85,7 +86,6 @@ private:
 
     QSignalMapper* cameraMapper;
     QSignalMapper* controllerMapper;
-
 };
 
 #endif // MAINWINDOW_H

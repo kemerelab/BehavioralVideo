@@ -7,11 +7,6 @@
 #include <QDebug>
 
 
-
-
-
-
-
 QT_USE_NAMESPACE
 
 QThread cameraThread0;
@@ -19,6 +14,7 @@ QThread cameraThread1;
 QThread videoWriterThread0;
 QThread videoWriterThread1;
 QThread dataControllerThread;
+QThread cameraControllerThread;
 
 int main(int argc, char *argv[])
 {
@@ -35,7 +31,8 @@ int main(int argc, char *argv[])
     videoWriterThread1.setObjectName("VideoWriter1Thread");
     dataControllerThread.start();
     dataControllerThread.setObjectName("DataControllerThread");
-
+    cameraControllerThread.start();
+    cameraControllerThread.setObjectName("CameraControllerThread");
 
     MainWindow w;
     QObject::connect(&w, SIGNAL(destroyed()), &cameraThread0, SLOT(quit()));
@@ -43,6 +40,7 @@ int main(int argc, char *argv[])
     QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread0, SLOT(quit()));
     QObject::connect(&w, SIGNAL(destroyed()), &videoWriterThread1, SLOT(quit()));
     QObject::connect(&w, SIGNAL(destroyed()), &dataControllerThread, SLOT(quit()));
+    QObject::connect(&w, SIGNAL(destroyed()), &cameraControllerThread, SLOT(quit()));
 
     w.show();
     return a.exec();

@@ -32,7 +32,7 @@
       <string>Open Controller</string>
      </property>
      <addaction name="actionDummyController"/>
-     <addaction name="actionSerialController"/>
+     <addaction name="actionMazeController"/>
     </widget>
     <widget class="QMenu" name="menuOpenCamera">
      <property name="title">
@@ -54,16 +54,9 @@
     <addaction name="actionRecord"/>
     <addaction name="actionStop"/>
     <addaction name="separator"/>
-    <addaction name="actionConfigure"/>
-   </widget>
-   <widget class="QMenu" name="menuCamera">
-    <property name="title">
-     <string>Camera</string>
-    </property>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
-   <addaction name="menuCamera"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionDisplay">
@@ -150,6 +143,14 @@
   <action name="actionFakeCamera">
    <property name="text">
     <string>Fake Camera</string>
+   </property>
+  </action>
+  <action name="actionMazeController">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Arduino Maze Controller</string>
    </property>
   </action>
  </widget>
