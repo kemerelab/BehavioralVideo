@@ -107,7 +107,7 @@ void OnUnknownCommand()
 // Report version
 void OnVersion()
 {
-  cmdMessenger.sendCmd(kStatus,"Linear-Maze RewardControl v1.0");
+  cmdMessenger.sendCmd(kVersion,"Linear-Maze RewardControl v1.0");
 }
 
 // Callback function that sets camera frame period

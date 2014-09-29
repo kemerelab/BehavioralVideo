@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QFormLayout>
 #include <QLabel>
+#include <QTextEdit>
 
 //unsigned int registers[590];    //for dumping camera registers to
 
@@ -55,6 +56,14 @@ void PtGreyInterface::Initialize()
         {
             error.PrintErrorTrace();
         }
+        qDebug() <<
+            "\n*** CAMERA INFORMATION ***" <<
+            "\nSerial number -" << camInfo.serialNumber <<
+            "\nCamera model - " << camInfo.modelName <<
+            "\nCamera vendor - " << camInfo.vendorName <<
+            "\nSensor - " << camInfo.sensorInfo <<
+            "\nResolution - " << camInfo.sensorResolution;
+
 
         // Get the camera configuration
         FlyCapture2::FC2Config config;
@@ -75,14 +84,6 @@ void PtGreyInterface::Initialize()
         {
             error.PrintErrorTrace();
         }
-
-        qDebug() <<
-            "\n*** CAMERA INFORMATION ***" <<
-            "\nSerial number -" << camInfo.serialNumber <<
-            "\nCamera model - " << camInfo.modelName <<
-            "\nCamera vendor - " << camInfo.vendorName <<
-            "\nSensor - " << camInfo.sensorInfo <<
-            "\nResolution - " << camInfo.sensorResolution;
 
 
         error = cam.GetVideoModeAndFrameRate(&videoMode, &frameRate);
@@ -287,14 +288,19 @@ void FindPointGreyCameras(QStringList *cameraNameList)
 PtGreyInterfaceSettingsWidget::PtGreyInterfaceSettingsWidget(PtGreyInterface *camera, QWidget *parent) :
     QWidget(parent)
 {
-    QWidget *container = new QWidget(this);
-    QFormLayout *layout = new QFormLayout(container);
+    QFormLayout *layout = new QFormLayout(this);
+    setLayout(layout);
 
-    QLabel *infoLabel = new QLabel("\nPoint Grey model - " + QString(camera->camInfo.modelName) +
+    QTextEdit *infoEdit = new QTextEdit("Point Grey model - " + QString(camera->camInfo.modelName) +
                                    "\nSerial number - " + QString(camera->camInfo.serialNumber) +
                                    "\nSensor - " + QString(camera->camInfo.sensorInfo) +
-                                   "\nResolution - " + QString(camera->camInfo.sensorResolution), container);
-    layout->addRow(tr("Camera Information"),infoLabel);
+                                   "\nResolution - " + QString(camera->camInfo.sensorResolution), this);
+    infoEdit->setReadOnly(true);
+    QFontMetrics m (infoEdit -> font()) ;
+    int RowHeight = m.lineSpacing() ;
+    infoEdit->setFixedHeight  (6 * RowHeight) ;
+    layout->addRow(tr("Camera Information"),infoEdit);
+
 }
 
 PtGreyInterfaceSettingsWidget::~PtGreyInterfaceSettingsWidget()

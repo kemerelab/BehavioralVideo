@@ -14,6 +14,11 @@ VideoWriter::VideoWriter(QObject *parent) :
     currentlyWriting = false;
 }
 
+void VideoWriter::setVideoCompressionFormat(VideoCompressionFormat fmt)
+{
+
+}
+
 void VideoWriter::initialize(QString filename)
 {
 

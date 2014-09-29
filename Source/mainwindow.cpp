@@ -15,6 +15,9 @@
 #include <QMenuBar>
 #include <QErrorMessage>
 #include <QPushButton>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QComboBox>
 
 #include <QtUiTools/QtUiTools>
 
@@ -98,15 +101,30 @@ MainWindow::MainWindow(QWidget *parent) :
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
     layout->addWidget(container,0,0);
 
+    // Build preferences pane (minus cameras and controllers!)
     settingsDialog = new QDialog(this);
     settingsDialog->setWindowTitle("Behavioral Video Preferences");
     QGridLayout* settingsLayout = new QGridLayout(settingsDialog);
     settingsContainer = new QTabWidget(this);
-    settingsLayout->addWidget(settingsContainer,0,0,1,4);
+    settingsLayout->addWidget(settingsContainer,0,0,8,4);
     QPushButton* settingsOkButton = new QPushButton("OK",settingsDialog);
+    settingsLayout->addWidget(settingsOkButton,8,3);
     connect(settingsOkButton,SIGNAL(clicked()),settingsDialog,SLOT(hide()));
-    QWidget *mainPage = new QWidget();
-    settingsContainer->addTab(mainPage,"VideoSettings");
+
+    QWidget *videoWriterPreferences = new QWidget();
+    settingsContainer->addTab(videoWriterPreferences,"VideoSettings");
+    QFormLayout *videoWriterPrefLayout = new QFormLayout(videoWriterPreferences);
+
+    QComboBox *defaultFileFormat = new QComboBox();
+    defaultFileFormat->addItem("MPEG2");
+    connect(defaultFileFormat, SIGNAL(activated(int)), this, SLOT(changeVideoFormat(int)));
+    videoWriterPrefLayout->addRow("Video file format", defaultFileFormat);
+
+    QLineEdit *defaultFileExtension = new QLineEdit(".mp4");
+    connect(defaultFileExtension, SIGNAL(textChanged(QString)), this, SLOT(changeVideoExtension(QString)));
+    videoWriterPrefLayout->addRow("Video file extension", defaultFileExtension);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -119,6 +137,16 @@ void MainWindow::showPreferencesDialog()
     settingsDialog->show();
     settingsDialog->raise();
     settingsDialog->activateWindow();
+}
+
+void MainWindow::changeVideoFormat(int fmt)
+{
+    emit newVideoFormat((VideoCompressionFormat) fmt);
+}
+
+void MainWindow::changeVideoExtension(QString ext)
+{
+    emit newVideoFileExtension(ext);
 }
 
 
@@ -239,6 +267,7 @@ void MainWindow::openDummyController()
     triggerType = NO_CAMERA_TRIGGER;
     openController();
     ui->actionDummyController->setChecked(true);
+    ui->actionDummyController->setDisabled(true);
 }
 
 void MainWindow::openController()
@@ -261,40 +290,14 @@ void MainWindow::openPGCamera(int serialNumber)
         return;
     }
 
-    /*
-        //add camera to camer menu
-
-        ui->menuCamera->addAction((QAction *)cameraMapper->mapping(serialnumber));
-
-        //add settings to camera menu
-        QMenu *settingMenu = new QMenu();
-        QMenu *triggerMenu = new QMenu("Trigger Pin");
-        QAction *pinAction0 = new QAction("Pin 0",this);
-        QAction *pinAction1 = new QAction("Pin 1",this);
-        QAction *pinAction2 = new QAction("Pin 2",this);
-        QAction *pinAction3 = new QAction("Pin 3",this);
-        triggerMenu->addAction(pinAction0);
-        triggerMenu->addAction(pinAction1);
-        triggerMenu->addAction(pinAction2);
-        triggerMenu->addAction(pinAction3);
-        settingMenu->addMenu(triggerMenu);
-        ((QAction *)cameraMapper->mapping(serialnumber))->setMenu(settingMenu);
-        QSignalMapper* pinMapper =  new QSignalMapper(this);
-        pinMapper->setMapping(pinAction0,"0" + QString::number(serialnumber));
-        pinMapper->setMapping(pinAction1,"1" + QString::number(serialnumber));
-        pinMapper->setMapping(pinAction2,"2" + QString::number(serialnumber));
-        pinMapper->setMapping(pinAction3,"3" + QString::number(serialnumber));
-        connect(pinAction0, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinAction1, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinAction2, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinAction3, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinMapper,SIGNAL(mapped(QString)),this,SLOT(selectPin(QString)));
-        */
-
     PtGreyInterface* pgCamera = new PtGreyInterface();
     pgCamera->serialNumber = serialNumber;
     openCamera(pgCamera);
     ((QAction *)cameraMapper->mapping(serialNumber))->setDisabled(true);
+
+    PtGreyInterfaceSettingsWidget *cameraSettings = new PtGreyInterfaceSettingsWidget(pgCamera,settingsDialog);
+    settingsContainer->addTab(cameraSettings, "Camera Settings");
+
 }
 
 void MainWindow::openFakeVideo()
@@ -325,10 +328,10 @@ void MainWindow::openCamera(GenericCameraInterface *camera)
                               Qt::QueuedConnection, Q_ARG(GenericCameraInterface*, camera));
 
     //cameraInterfaces.insert(serialNumber,pgCamera);
-    QMetaObject::invokeMethod(camera, "Initialize", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(camera, "Initialize", Qt::BlockingQueuedConnection);
     numCameras++;
 
-    QMetaObject::invokeMethod(dataController, "startVideoViewing", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(dataController, "startVideoViewing", Qt::BlockingQueuedConnection);
 //    emit startCaptureAsync();
 }
 

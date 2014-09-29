@@ -37,6 +37,9 @@ public:
 
 public slots:
     void showPreferencesDialog(void);
+    void changeVideoFormat(int fmt);
+    void changeVideoExtension(QString ext);
+
     void openMazeController(void);
     void openDummyController(void);
     void openController();
@@ -67,6 +70,9 @@ signals:
     void startCaptureSyncSignal(void);
     void restartCaptureAsyncSignal(void);
     void restartCaptureSyncSignal(void);
+
+    void newVideoFormat(VideoCompressionFormat);
+    void newVideoFileExtension(QString);
 
 private slots:
 

@@ -6,6 +6,13 @@
 #include <QFile>
 #include "ffmpeg.h"
 
+enum VideoCompressionFormat {
+    MPEG2,
+    H264,
+    MJPEG
+};
+
+
 class VideoWriter : public QObject
 {
     Q_OBJECT
@@ -19,6 +26,7 @@ signals:
     void writingEnded(void);
 
 public slots:
+    void setVideoCompressionFormat(VideoCompressionFormat fmt);
     void initialize(QString);
     void newFrame(QImage image);
     void beginWriting(void);
@@ -28,6 +36,8 @@ private:
     int width, height;
     int frameRateNumerator, frameRateDenominator;
     QImage *currentFrame;
+
+    VideoCompressionFormat compressionFormat;
 
     QFile *vFile;
     QString *vFilename;

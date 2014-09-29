@@ -1,6 +1,9 @@
 #include "MazeController.h"
 #include <QDebug>
 #include <QThread>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QComboBox>
 
 bool isMazeControllerConnected()
 {
@@ -29,8 +32,11 @@ int MazeController::connectToPort(QString portname)
                 }
                 port->setBaudRate(QSerialPort::Baud115200);
                 port->clear();
+                port->flush();
                 QThread::msleep(500);
                 port->clear();
+                port->write("9;"); //ask for version
+                port->flush();
                 connect(port, SIGNAL(readyRead()), this, SLOT(processSerialData()));
                 qDebug() << "Connected to arduino maze controller.";
                 return 0;
@@ -82,7 +88,7 @@ void MazeController::processSerialData()
                     switch(parsedCommand.at(0).toInt()) {
                     case (0): // status message
                         emit statusMessageReceived(parsedCommand.at(1));
-                        qDebug() <<  parsedCommand.at(1);
+                        qDebug() << "maze controller status: " <<  parsedCommand.at(1);
                         break;
                     case (1): // event
                         timestamp = parsedCommand.at(1).toULong();
@@ -98,6 +104,11 @@ void MazeController::processSerialData()
                                                  parsedCommand.at(4).toInt(),
                                                  parsedCommand.at(5).toInt());
                         }
+                        break;
+                    case (9):
+                        versionString = parsedCommand.at(1);
+                        emit statusMessageReceived(versionString);
+                        qDebug() << "maze controller version:" << versionString;
                         break;
                     default:
                         qDebug() << "Unexpected command received." << chunkedCommands.at(i);
@@ -135,6 +146,26 @@ void MazeController::endWriting()
     logFile->close();
 }
 
+void MazeController::changeCameraFrameRate(int)
+{
+
+}
+
+void MazeController::changeCameraTriggerPin(int)
+{
+
+}
+
+void MazeController::testWell(int)
+{
+
+}
+
+void MazeController::resetWellCounts()
+{
+
+}
+
 void MazeController::startTrigger(bool syncState) {
     if (syncState) {
         port->write("6,1;"); // enable trigger logging
@@ -159,6 +190,8 @@ MazeController::MazeController(QObject *parent) :
 {
     loggingEnabled = false;
     commandBuffer = "";
+    availablePins << "A0" << "A1" << "A2" << "A3" << "A4" << "A5" << "6" << "7";
+    numberOfWells = 0;
 }
 
 MazeController::~MazeController()
@@ -166,3 +199,33 @@ MazeController::~MazeController()
     port->close();
 }
 
+
+MazeControllerSettingsWidget::MazeControllerSettingsWidget(MazeController *controller, QWidget *parent) :
+    QWidget(parent)
+{
+    QFormLayout *layout = new QFormLayout(this);
+    setLayout(layout);
+
+    QLineEdit *infoEdit = new QLineEdit(controller->versionString, this);
+    infoEdit->setReadOnly(true);
+    layout->addRow(tr("Controller Version"),infoEdit);
+
+    //QComboBox *beamBreakA = new QComboBox(this);
+    //beamBreakA->addItem(controller->availablePins);
+    //layout->addRow(tr("Pin for beam break A"),beamBreakA);
+}
+
+MazeControllerSettingsWidget::~MazeControllerSettingsWidget()
+{
+
+}
+
+void MazeControllerSettingsWidget::changeCameraFrameRate(QString)
+{
+
+}
+
+void MazeControllerSettingsWidget::changeCameraTriggerPin(int)
+{
+
+}
