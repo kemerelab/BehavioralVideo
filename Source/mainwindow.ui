@@ -43,6 +43,8 @@
     <addaction name="separator"/>
     <addaction name="menuOpenCamera"/>
     <addaction name="menuOpenController"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
    </widget>
@@ -151,6 +153,11 @@
    </property>
    <property name="text">
     <string>Arduino Maze Controller</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences</string>
    </property>
   </action>
  </widget>

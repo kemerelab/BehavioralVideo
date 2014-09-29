@@ -14,6 +14,7 @@
 #include <QMessageBox>
 #include <QMenuBar>
 #include <QErrorMessage>
+#include <QPushButton>
 
 #include <QtUiTools/QtUiTools>
 
@@ -35,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
     bool firmware = false;
     bool hardware = false;
     triggerType = NO_SELECTION;
+
+    connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(showPreferencesDialog()));
 
     // Build Controller Menu
     connect(ui->actionDummyController, SIGNAL(triggered()), this,SLOT(openDummyController()));
@@ -95,11 +98,27 @@ MainWindow::MainWindow(QWidget *parent) :
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
     layout->addWidget(container,0,0);
 
+    settingsDialog = new QDialog(this);
+    settingsDialog->setWindowTitle("Behavioral Video Preferences");
+    QGridLayout* settingsLayout = new QGridLayout(settingsDialog);
+    settingsContainer = new QTabWidget(this);
+    settingsLayout->addWidget(settingsContainer,0,0,1,4);
+    QPushButton* settingsOkButton = new QPushButton("OK",settingsDialog);
+    connect(settingsOkButton,SIGNAL(clicked()),settingsDialog,SLOT(hide()));
+    QWidget *mainPage = new QWidget();
+    settingsContainer->addTab(mainPage,"VideoSettings");
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::showPreferencesDialog()
+{
+    settingsDialog->show();
+    settingsDialog->raise();
+    settingsDialog->activateWindow();
 }
 
 

@@ -24,14 +24,10 @@
 // Arduino input pins corresponding to food well beam breaks
 const int beamBreakA = A4;
 const int beamBreakB = A5;
-const int beamBreakC = A3;
-const int beamBreakMask = beamBreakA | beamBreakB | beamBreakC;
-int wellState = 0;
 
 // Arduino output pins corresponding to syringe pump output controls
 const int pumpA = 6;
 const int pumpB = 7;
-const int pumpC = A0; //Not sure if A0 is an output pin
 
 const int dispenseLength = 1000; // duration (in ms) that pump remains active per reward
 
@@ -41,7 +37,6 @@ enum WellType {
   none,
   wellA,
   wellB,
-  wellC,
   wellMulti };
 
 int i;
@@ -49,18 +44,16 @@ int i;
 // Camera trigger state used by timer interrupt
 int triggerState = LOW;
 
-volatile int triggerPin = 13;  // the pin with a LED
+volatile int triggerPin = A1;  // the pin with a LED was 13
 volatile unsigned long int triggerCounter = 0;
 volatile unsigned long int lastTriggerTime = 0;
 unsigned long int trackingTriggerCounter = 0;
 unsigned long int trackingTriggerTime = 0;
 volatile int logCameraTriggers = 0; // flag to denote logging
 
-int lastWell, lastLastWell;
+int lastWell;
 int activatedWell;
 int fakeActivatedWell = none;
-
-int wellAFlag, wellBFlag, wellCFlag;
 
 // State information for output control
 
@@ -69,7 +62,6 @@ unsigned long int dispenseTime = 0; // will be the time dispensing should end
 // Reward history for webserver output
 int wellACount = 0;
 int wellBCount = 0;
-int wellCCount = 0;
 unsigned long time;
 
 
@@ -115,7 +107,7 @@ void OnUnknownCommand()
 // Report version
 void OnVersion()
 {
-  cmdMessenger.sendCmd(kStatus,"RewardControl v1.0");
+  cmdMessenger.sendCmd(kStatus,"Linear-Maze RewardControl v1.0");
 }
 
 // Callback function that sets camera frame period
@@ -190,10 +182,9 @@ void OnClearWellLog()
   cmdMessenger.sendCmdArg("Clearing well counters. Current counts");
   cmdMessenger.sendCmdArg((int) wellACount);  
   cmdMessenger.sendCmdArg((int) wellBCount);  
-  cmdMessenger.sendCmdArg((int) wellCCount);  
-  cmdMessenger.sendCmdArg((int) wellACount + wellBCount + wellCCount);  
+  cmdMessenger.sendCmdArg((int) wellACount + wellBCount);  
   cmdMessenger.sendCmdEnd();
-  wellACount = 0; wellBCount = 0; wellCCount = 0;
+  wellACount = 0; wellBCount = 0;
 }
 
 void triggerCamera(void)
@@ -215,16 +206,13 @@ void setup() {
   // initalize the input and output pins:
   pinMode(beamBreakA, INPUT);
   pinMode(beamBreakB, INPUT);
-  pinMode(beamBreakC, INPUT);
   pinMode(pumpA, OUTPUT);
   pinMode(pumpB, OUTPUT);
-  pinMode(pumpC, OUTPUT);
   
   pinMode(triggerPin, OUTPUT);
 
   digitalWrite(pumpA, HIGH); // initially turn syringe pumps off
   digitalWrite(pumpB, HIGH); //   (they're active LOW)
-  digitalWrite(pumpC, HIGH); //
 
   Timer1.initialize(16666); // 30 frames per second
   Timer1.attachInterrupt(triggerCamera); // triggerCamera to run every 0.15 seconds
@@ -243,7 +231,6 @@ void setup() {
   OnVersion();
   
   lastWell = none;
-  lastLastWell = none;
   
 }
 
@@ -269,15 +256,8 @@ void loop() {
     if (activatedWell != lastWell) { // ignore repeated visits to a well
       LogWellVisit();
       
-      if ( ( (lastLastWell == none) && (lastWell == none) ) ||
-           ( (lastLastWell == none) && (lastWell == wellB) ) || 
-           ( (lastLastWell == wellA) && (lastWell == wellB) && (activatedWell == wellC) ) ||
-           ( (lastLastWell == wellC) && (lastWell == wellB) && (activatedWell == wellA) ) ||
-           ( (lastWell == wellA) && (activatedWell == wellB) ) ||
-           ( (lastWell == wellC) && (activatedWell == wellB) ) )
-        RewardWell(activatedWell);
+      RewardWell(activatedWell);
 
-      lastLastWell = lastWell;
       lastWell = activatedWell;
     }
   }
@@ -291,26 +271,22 @@ void loop() {
 }
 
 void checkBeamBreaks(void) {
-  int aflag, bflag, cflag, newWell;
+  int aflag, bflag, newWell;
   
   aflag = digitalRead(beamBreakA); // HIGH = 1, LOW = 0!
   bflag = digitalRead(beamBreakB); // HIGH = 1, LOW = 0!
-  cflag = digitalRead(beamBreakC); // HIGH = 1, LOW = 0!
-  if ((aflag + bflag + cflag) == 0)
+  if ((aflag + bflag) == 0)
     newWell = none;
-  if ((aflag + bflag + cflag) > 1)
+  if ((aflag + bflag) > 1)
     activatedWell = wellMulti;    
   if (aflag)
     activatedWell = wellA;
   if (bflag)
     activatedWell = wellB;
-  if (cflag)
-    activatedWell = wellC;
     
   if (fakeActivatedWell != none) {
     if ( (fakeActivatedWell == wellA) ||
-         (fakeActivatedWell == wellB) ||
-         (fakeActivatedWell == wellC) ) {
+         (fakeActivatedWell == wellB) ) {
       activatedWell = fakeActivatedWell;
          }
     fakeActivatedWell = none;
@@ -344,20 +320,16 @@ void RewardWell(int whichOne) {
   
   switch (whichOne) {
   case wellA:
-    digitalWrite(pumpB, HIGH); digitalWrite(pumpC, HIGH); digitalWrite(pumpA, LOW);
+    digitalWrite(pumpB, HIGH); digitalWrite(pumpA, LOW);
     wellChar = 'A';
     wellCount = ++wellACount;
     break;
   case wellB:
-    digitalWrite(pumpA, HIGH); digitalWrite(pumpC, HIGH); digitalWrite(pumpB, LOW);
+    digitalWrite(pumpA, HIGH); digitalWrite(pumpB, LOW);
     wellChar = 'B';
     wellCount = ++wellBCount;
     break;
-  case wellC:
-    digitalWrite(pumpA, HIGH); digitalWrite(pumpB, HIGH); digitalWrite(pumpC, LOW);
-    wellChar = 'C';
-    wellCount = ++wellCCount;
-    break;
+
   }
   dispenseTime = millis() + dispenseLength;
   
@@ -366,7 +338,7 @@ void RewardWell(int whichOne) {
   cmdMessenger.sendCmdArg("R");
   cmdMessenger.sendCmdArg((char) wellChar);
   cmdMessenger.sendCmdArg((int) wellCount);  
-  cmdMessenger.sendCmdArg((int) wellACount + wellBCount + wellCCount);  
+  cmdMessenger.sendCmdArg((int) wellACount + wellBCount);  
   cmdMessenger.sendCmdEnd();
 }
 
@@ -374,7 +346,6 @@ void DoDispense() {
   if ((millis() > dispenseTime) && (dispenseTime != 0)) { // done dispensing
     digitalWrite(pumpA,HIGH); // (these are active low outputs)
     digitalWrite(pumpB,HIGH); // (these are active low outputs)
-    digitalWrite(pumpC,HIGH); // (these are active low outputs)
     dispenseTime = 0;
   }
 }

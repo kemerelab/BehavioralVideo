@@ -48,5 +48,5 @@ void MazeInfoWindow::newWellVisitEvent(ulong time, char well)
 void MazeInfoWindow::newWellRewardEvent(ulong time, char well, int count, int total)
 {
     logWindow->appendPlainText("[" + QString::number(time) + "] " + "Rewarded well " + QString(well) +
-                               " (" + QString::number(count) + ", " + QString::number(total));
+                               " (" + QString::number(count) + ", " + QString::number(total) + ")");
 }

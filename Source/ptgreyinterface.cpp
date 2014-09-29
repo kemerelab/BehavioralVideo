@@ -1,12 +1,8 @@
 #include "ptgreyinterface.h"
 
 #include <QDebug>
-#include <QThread>
-
-#include <QtCore/QString>
-#include <QtCore/QFile>
-#include <QtCore/QDebug>
-#include <QtCore/QTextStream>
+#include <QFormLayout>
+#include <QLabel>
 
 //unsigned int registers[590];    //for dumping camera registers to
 
@@ -54,7 +50,6 @@ void PtGreyInterface::Initialize()
         }
 
         // Get the camera information
-        FlyCapture2::CameraInfo camInfo;
         error = cam.GetCameraInfo(&camInfo);
         if (error != FlyCapture2::PGRERROR_OK)
         {
@@ -108,7 +103,7 @@ void PtGreyInterface::Initialize()
             //pixFmt = FlyCapture2::PIXEL_FORMAT_MONO8;
             //vPixFmt = PIX_FMT_GRAY8;
             qDebug() << "Video mode 640x480";
-            frameRate = FlyCapture2::FRAMERATE_60;
+            frameRate = FlyCapture2::FRAMERATE_60; // required for synchronous triggering at 30 fps
             error = cam.SetVideoModeAndFrameRate(videoMode, frameRate);
             if (error != FlyCapture2::PGRERROR_OK)
             {
@@ -157,7 +152,7 @@ void PtGreyInterface::Initialize()
         if (!currentFrame)
             qCritical() << "QImage not allocated";
 
-        triggerMode.source = 1; // GPIO 0
+        triggerMode.source = 0; // GPIO 0
         triggerMode.mode = 0;
         triggerMode.onOff = false; // start in async mode
         cam.SetTriggerMode(&triggerMode, false);
@@ -285,5 +280,24 @@ void FindPointGreyCameras(QStringList *cameraNameList)
         cameraNameList->append(QString::number(camInfo.serialNumber));
         qDebug() << "Camera found " << QString::number(camInfo.serialNumber);
     }
+
+}
+
+
+PtGreyInterfaceSettingsWidget::PtGreyInterfaceSettingsWidget(PtGreyInterface *camera, QWidget *parent) :
+    QWidget(parent)
+{
+    QWidget *container = new QWidget(this);
+    QFormLayout *layout = new QFormLayout(container);
+
+    QLabel *infoLabel = new QLabel("\nPoint Grey model - " + QString(camera->camInfo.modelName) +
+                                   "\nSerial number - " + QString(camera->camInfo.serialNumber) +
+                                   "\nSensor - " + QString(camera->camInfo.sensorInfo) +
+                                   "\nResolution - " + QString(camera->camInfo.sensorResolution), container);
+    layout->addRow(tr("Camera Information"),infoLabel);
+}
+
+PtGreyInterfaceSettingsWidget::~PtGreyInterfaceSettingsWidget()
+{
 
 }

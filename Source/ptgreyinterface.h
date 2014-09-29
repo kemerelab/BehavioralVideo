@@ -2,6 +2,7 @@
 #define PTGREYINTERFACE_H
 
 #include <QObject>
+#include <QWidget>
 #include "ffmpeg.h"
 #include <FlyCapture2.h>
 #include <QImage>
@@ -35,6 +36,7 @@ public slots:
     void ChangeTriggerPin(int);
 public:
     unsigned int serialNumber;
+    FlyCapture2::CameraInfo camInfo;
 
 private:
     //FlyCapture2::PixelFormat pixFmt;
@@ -51,5 +53,21 @@ private:
     bool triggerEnabled;
 
 };
+
+class PtGreyInterfaceSettingsWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit PtGreyInterfaceSettingsWidget(PtGreyInterface *camera, QWidget *parent = 0);
+     ~PtGreyInterfaceSettingsWidget(void);
+
+public slots:
+signals:
+    void changeTriggerPin(int);
+    void changeTriggerEdge(int);
+
+private:
+};
+
 
 #endif // PTGREYINTERFACE_H

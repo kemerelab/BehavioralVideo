@@ -3,13 +3,15 @@
 #include <QSignalMapper>
 #include <QMainWindow>
 #include <QGridLayout>
+#include <QDialog>
+#include <QSerialPort>
+#include <QTabWidget>
 #include "datacontroller.h"
 #include "videowidget.h"
 #include "videoglwidget.h"
 #include "videowriter.h"
 #include "ptgreyinterface.h"
 #include "fakecamerainterface.h"
-#include <QSerialPort>
 #include "GenericCameraController.h"
 #include "MazeInfoWindow.h"
 
@@ -34,6 +36,7 @@ public:
     uint numCameras;
 
 public slots:
+    void showPreferencesDialog(void);
     void openMazeController(void);
     void openDummyController(void);
     void openController();
@@ -47,6 +50,7 @@ public slots:
     void openVideoFile();
 
     void resetSavingMenus();
+
 
 signals:
     //void initializeController(QString portname);
@@ -86,6 +90,9 @@ private:
 
     QSignalMapper* cameraMapper;
     QSignalMapper* controllerMapper;
+
+    QDialog* settingsDialog;
+    QTabWidget* settingsContainer;
 };
 
 #endif // MAINWINDOW_H
