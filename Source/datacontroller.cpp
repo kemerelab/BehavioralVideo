@@ -44,12 +44,6 @@ void DataController::stopVideoWriting()
 
 void DataController::initializeVideoWriting(QString filename)
 {
-    /*
-    for (int i = 0; i < numCameras; i++) {
-        QMetaObject::invokeMethod(videoWriterList.at(i), "initialize", Qt::BlockingQueuedConnection,
-                                  Q_ARG(QString, (QString)(filename + cameraList.at(i)->cameraName)));
-    }
-    */
     QMetaObject::invokeMethod(videoWriterList.at(0), "initialize", Qt::BlockingQueuedConnection,
                               Q_ARG(QString, (QString)(filename)));
     emit updateSavingMenus(READY_TO_WRITE);

@@ -3,14 +3,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QThread>
-#include <QTimer>
 #include <QDebug>
-
-
-
-
-
-
 
 QT_USE_NAMESPACE
 

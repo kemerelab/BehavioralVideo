@@ -150,8 +150,6 @@ void VideoWriter::newFrame(QImage image)
     if (currentlyWriting) {
         currentFrame = &image;
 
-        int i;
-
         AVCodecContext *c = video_st->codec;
         avpicture_fill((AVPicture *)tmp_picture, currentFrame->bits(),
                        PIX_FMT_RGB24, c->width, c->height);

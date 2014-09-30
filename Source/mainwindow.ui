@@ -43,8 +43,8 @@
     <addaction name="separator"/>
     <addaction name="menuOpenCamera"/>
     <addaction name="menuOpenController"/>
-    <addaction name="actionQuit"/>
     <addaction name="separator"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuVideo">
     <property name="title">
@@ -54,16 +54,9 @@
     <addaction name="actionRecord"/>
     <addaction name="actionStop"/>
     <addaction name="separator"/>
-    <addaction name="actionConfigure"/>
-   </widget>
-   <widget class="QMenu" name="menuCamera">
-    <property name="title">
-     <string>Camera</string>
-    </property>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo"/>
-   <addaction name="menuCamera"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionDisplay">
