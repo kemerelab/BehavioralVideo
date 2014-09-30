@@ -98,8 +98,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMetaObject::invokeMethod(dataController, "registerVideoWidget", Qt::QueuedConnection,
                               Q_ARG(VideoGLWidget*, videoWidget));
 
+    videoContainer = new QWidget(this);
+    layout->addWidget(videoContainer,0,0);
+    videoContainer->setStyleSheet("QWidget {background: light gray}");
+    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
-    layout->addWidget(container,0,0);
+    vContainerLayout->addWidget(container,0,0);
 
     // Build preferences pane (minus cameras and controllers!)
     settingsDialog = new QDialog(this);
@@ -176,12 +180,12 @@ void MainWindow::openVideoFile()
                 fileSelected = true;
             }
         }
-        else if (filename != NULL){
+        else
             fileSelected = true;
-        }
     }
 
-    emit initializeVideoWriting(filename);
+    if (fileSelected)
+        emit initializeVideoWriting(filename);
 }
 
 
@@ -193,12 +197,14 @@ void MainWindow::updateVideoMenus(SavingState state)
             qDebug() << "enablevideosaving";
             ui->actionRecord->setEnabled(true);
             ui->actionOpenVideoFile->setDisabled(true);
+            videoContainer->setStyleSheet("QWidget {background: red}");
             savingState = READY_TO_WRITE;
             break;
 
         case CURRENTLY_WRITING:
             ui->actionRecord->setDisabled(true);
             ui->actionStop->setEnabled(true);
+            videoContainer->setStyleSheet("QWidget {background: green}");
             if (controllerInitialized)
                 ui->actionOpenVideoFile->setDisabled(true);
             savingState = CURRENTLY_WRITING;
@@ -207,6 +213,7 @@ void MainWindow::updateVideoMenus(SavingState state)
         case NOT_SAVING:
             ui->actionRecord->setDisabled(true);
             ui->actionStop->setDisabled(true);
+            videoContainer->setStyleSheet("QWidget {background: light gray}");
             if (controllerInitialized)
                 ui->actionOpenVideoFile->setEnabled(true);
             qDebug() << "menus reset";

@@ -65,6 +65,7 @@ private:
 //    QOpenGLShaderProgram *m_program;
     //int m_frame;
     QImage currentFrame;
+
     int v_width, v_height;
 };
 

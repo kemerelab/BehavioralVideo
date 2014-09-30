@@ -81,6 +81,8 @@ private:
     QGridLayout *layout;
     QString name;
 
+    QWidget *videoContainer;
+
     DataController *dataController;
     SavingState savingState;
     uint numCamerasReadyToWrite;

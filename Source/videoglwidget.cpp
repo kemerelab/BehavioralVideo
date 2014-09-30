@@ -19,18 +19,14 @@ void VideoGLWidget::initialize() {
     glGenTextures(1,&m_texture);
     glBindTexture(GL_TEXTURE_2D,m_texture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    //glBindTexture(GL_TEXTURE_2D,m_texture);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, currentFrame->width(),
-    //             currentFrame->height(), 0, GL_RGB, GL_UNSIGNED_BYTE, currentFrame->bits());
 }
 
 void VideoGLWidget::render()
 {
     glViewport(0, 0, width(), height());
 
+    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearColor(0.4f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -52,8 +48,8 @@ void VideoGLWidget::render()
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     glColor3f(1,1,1);
+
     glBindTexture(GL_TEXTURE_2D, m_texture);
     glBegin(GL_QUADS);
         glTexCoord2f(0,0); glVertex3f(-1, -1, -1);
