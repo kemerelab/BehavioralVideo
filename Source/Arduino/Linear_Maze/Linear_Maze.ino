@@ -48,6 +48,7 @@ void loop() {
     if (activatedWell != lastWell) { // ignore repeated visits to a well
       LogWellVisit();
       
+      wellRewardCounts[activatedWell]++;
       RewardWell(activatedWell);
 
       lastWell = activatedWell;
