@@ -18,6 +18,8 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QMenu>
+#include <QToolBar>
 
 #include <QtUiTools/QtUiTools>
 
@@ -44,12 +46,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Build Controller Menu
     connect(ui->actionDummyController, SIGNAL(triggered()), this,SLOT(openDummyController()));
-    if (isMazeControllerConnected()) {
-        ui->actionMazeController->setEnabled(true);
-        ui->actionMazeController->setChecked(false);
-        ui->actionMazeController->setEnabled(true);
-
-        connect(ui->actionMazeController, SIGNAL(triggered()),this,SLOT(openMazeController()));
+    QStringList availableSerialPorts = listSerialPorts();
+    if (!availableSerialPorts.isEmpty()) {
+        QSignalMapper *serialPortMapper = new QSignalMapper(this);
+        for (int i = 0; i < availableSerialPorts.length(); i++) {
+            qDebug() << availableSerialPorts.at(i);
+            QAction *serialPortAction = new QAction("Arduino: " + availableSerialPorts.at(i),this);
+            ui->menuOpenController->addAction(serialPortAction);
+            connect(serialPortAction, SIGNAL(triggered()), serialPortMapper, SLOT(map()));
+            serialPortMapper->setMapping(serialPortAction,availableSerialPorts.at(i));
+        }
+        connect(serialPortMapper, SIGNAL(mapped(QString)),this,SLOT(openMazeController(QString)));
     }
 
     connect(ui->actionFakeCamera,SIGNAL(triggered()),this,SLOT(openFakeVideo()));
@@ -101,10 +108,29 @@ MainWindow::MainWindow(QWidget *parent) :
     videoContainer = new QWidget(this);
     layout->addWidget(videoContainer,0,0);
     videoContainer->setStyleSheet("QWidget {background: light gray}");
-    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
-    vContainerLayout->addWidget(container,0,0);
+    QToolBar *toolBar = new QToolBar(videoContainer);
+    toolBar->addAction(ui->actionPreferences);
+    toolBar->addAction(ui->actionOpenVideoFile);
+    toolBar->addAction(ui->actionRecord);
+    toolBar->addAction(ui->actionStop);
+    toolBar->setAllowedAreas(Qt::TopToolBarArea);
+    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
+    vContainerLayout->addWidget(toolBar);
+    vContainerLayout->setSpacing(0);
+    vContainerLayout->addWidget(container);
 
+
+
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::setupPrefereuncesUI()
+{
     // Build preferences pane (minus cameras and controllers!)
     settingsDialog = new QDialog(this);
     settingsDialog->setWindowTitle("Behavioral Video Preferences");
@@ -128,12 +154,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(defaultFileExtension, SIGNAL(textChanged(QString)), this, SLOT(changeVideoExtension(QString)));
     videoWriterPrefLayout->addRow("Video file extension", defaultFileExtension);
 
-
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
 }
 
 void MainWindow::showPreferencesDialog()
@@ -231,10 +251,8 @@ void MainWindow::resetSavingMenus()
 }
 
 
-void MainWindow::openMazeController()
+void MainWindow::openMazeController(QString portname)
 {    
-    MazeInfoWindow *mazeInfoWindow = new MazeInfoWindow(this);
-    addDockWidget(Qt::RightDockWidgetArea,mazeInfoWindow);
 
     qDebug()<< "Initializing Controller";
     controller = new MazeController;
@@ -242,25 +260,29 @@ void MainWindow::openMazeController()
     int error;
     QMetaObject::invokeMethod((MazeController *)controller, "connectToPort", Qt::BlockingQueuedConnection,
                               Q_RETURN_ARG(int, error),
-                              Q_ARG(QString, name));
+                              Q_ARG(QString, portname));
 
     if (error != 0)
     {
         qDebug() << "Error opening controller";
-        ui->actionMazeController->setDisabled(true);
+        delete controller;
         return;
     }
 
-    connect((MazeController *)controller, SIGNAL(serialDataReceived(QByteArray)),
-            mazeInfoWindow, SLOT(newLogText(QByteArray)));
-    connect((MazeController *)controller, SIGNAL(statusMessageReceived(QString)),
+    MazeInfoWindow *mazeInfoWindow = new MazeInfoWindow(((MazeController *)controller)->numberOfWells,this);
+    addDockWidget(Qt::RightDockWidgetArea,mazeInfoWindow);
+
+    connect(((MazeController *)controller)->serialPortInterface, SIGNAL(statusMessageReceived(QString)),
             mazeInfoWindow, SLOT(newStatusMessage(QString)));
-    connect((MazeController *)controller, SIGNAL(frameTimestampEvent(ulong,ulong)),
+    connect(((MazeController *)controller)->serialPortInterface, SIGNAL(frameTimestampEvent(ulong,ulong)),
             mazeInfoWindow, SLOT(newFrameTimestampEvent(ulong,ulong)));
-    connect((MazeController *)controller, SIGNAL(wellVisitEvent(ulong,char)),
-            mazeInfoWindow, SLOT(newWellVisitEvent(ulong,char)));
-    connect((MazeController *)controller, SIGNAL(wellRewardEvent(ulong,char,int,int)),
-            mazeInfoWindow, SLOT(newWellRewardEvent(ulong,char,int,int)));
+    connect(((MazeController *)controller)->serialPortInterface, SIGNAL(wellVisitEvent(ulong,int)),
+            mazeInfoWindow, SLOT(newWellVisitEvent(ulong,int)));
+    connect(((MazeController *)controller)->serialPortInterface, SIGNAL(wellRewardEvent(ulong,int)),
+            mazeInfoWindow, SLOT(newWellRewardEvent(ulong,int)));
+    connect(((MazeController *)controller)->serialPortInterface, SIGNAL(newRewardCounts(QList<int>)),
+            mazeInfoWindow, SLOT(newWellCounts(QList<int>)));
+
 
     triggerType = EXTERNAL_CAMERA_TRIGGER;
     openController();

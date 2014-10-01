@@ -18,6 +18,8 @@ enum CommandEnum
   kEnableTrigger,    // Command to start/stop triggering (argument: true=on, false=off)
   kEnableTriggerLogging, // Command to enable trigger *logging*
   kSetEventPin,      // Command to set IO event pin (argument: pin number)
+  kQueryWellLog,     // Command to ask for well log
+  kQueryPins,        // Command to ask for IO pin setup
   kFakeBeamBreak,    // Command to fake a well visit (argument: character A B or C)
   kVersion,          // Command to ask for version info
 };

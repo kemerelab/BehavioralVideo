@@ -12,6 +12,7 @@
  
  */
 
+#define TESTING
 #include "MazeControlFunctions.h"
 
 const int nFoodWells = 3;

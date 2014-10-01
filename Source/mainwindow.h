@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QSerialPort>
 #include <QTabWidget>
+#include <QToolButton>
 #include "datacontroller.h"
 #include "videowidget.h"
 #include "videoglwidget.h"
@@ -35,12 +36,14 @@ public:
     uint widgety;
     uint numCameras;
 
+    void setupPrefereuncesUI(void);
+
 public slots:
     void showPreferencesDialog(void);
     void changeVideoFormat(int fmt);
     void changeVideoExtension(QString ext);
 
-    void openMazeController(void);
+    void openMazeController(QString portname);
     void openDummyController(void);
     void openController();
     void openFakeVideo();
@@ -79,7 +82,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
-    QString name;
 
     QWidget *videoContainer;
 

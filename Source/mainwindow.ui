@@ -32,7 +32,6 @@
       <string>Open Controller</string>
      </property>
      <addaction name="actionDummyController"/>
-     <addaction name="actionMazeController"/>
     </widget>
     <widget class="QMenu" name="menuOpenCamera">
      <property name="title">
@@ -70,16 +69,30 @@
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/media-record.svg</normaloff>:/images/icons/media-record.svg</iconset>
+   </property>
    <property name="text">
     <string>Record</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionStop">
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/media-playback-stop.svg</normaloff>:/images/icons/media-playback-stop.svg</iconset>
+   </property>
    <property name="text">
     <string>Stop</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionConfigure">
@@ -99,8 +112,15 @@
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/media-eject.svg</normaloff>:/images/icons/media-eject.svg</iconset>
+   </property>
    <property name="text">
     <string>Open</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionFakeVideo">
@@ -156,13 +176,22 @@
    </property>
   </action>
   <action name="actionPreferences">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/emblem-system.svg</normaloff>:/images/icons/emblem-system.svg</iconset>
+   </property>
    <property name="text">
     <string>Preferences</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>actionQuit</sender>

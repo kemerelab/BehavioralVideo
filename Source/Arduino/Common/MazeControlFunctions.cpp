@@ -45,7 +45,7 @@ unsigned long int dispenseTime = 0; // will be the time dispensing should end
 
 // Camera trigger state used by timer interrupt
 int triggerState = LOW;
-volatile int triggerPin = A1;  // the pin with a LED was 13
+volatile int triggerPin = TRIGGER_PIN;  // the pin with a LED was 13
 volatile unsigned long int triggerCounter = 0;
 volatile unsigned long int lastTriggerTime = 0;
 unsigned long int trackingTriggerCounter = 0;
@@ -69,6 +69,8 @@ void attachCommandCallbacks()
   cmdMessenger.attach(kFakeBeamBreak, OnFakeBeamBreak);  
   cmdMessenger.attach(kClearWellLog, OnClearWellLog);
   cmdMessenger.attach(kVersion, OnVersion);
+  cmdMessenger.attach(kQueryPins, OnQueryPins);
+  cmdMessenger.attach(kQueryWellLog, OnQueryWellLog);
 }
 
 // Called when a received command has no attached function
@@ -167,6 +169,35 @@ void OnClearWellLog()
   cmdMessenger.sendCmdEnd();
 }
 
+// Callback function to report pin mappings
+void OnQueryPins()
+{
+  int i;
+  cmdMessenger.sendCmdStart(kQueryPins);
+  for (i = 0; i < nFoodWells; i++) {
+    cmdMessenger.sendCmdArg((int) beamBreakPins[i]);  
+    cmdMessenger.sendCmdArg((int) pumpPins[i]);  
+  }
+  cmdMessenger.sendCmdArg((int) triggerPin);
+  cmdMessenger.sendCmdEnd();
+}
+
+// Callback function to report well counters
+void OnQueryWellLog()
+{
+  int i;
+  int total;
+
+  total = 0;
+  cmdMessenger.sendCmdStart(kQueryWellLog);
+  for (i = 0; i < nFoodWells; i++) {
+    cmdMessenger.sendCmdArg((int) wellRewardCounts[i]);  
+    total = total + wellRewardCounts[i];
+  }
+  cmdMessenger.sendCmdArg((int) total);  
+  cmdMessenger.sendCmdEnd();
+}
+
 void LogWellVisit (void) {
   cmdMessenger.sendCmdStart(kEvent);
   cmdMessenger.sendCmdArg((unsigned long) eventTime);
@@ -209,9 +240,11 @@ void RewardWell(int whichOne) {
   cmdMessenger.sendCmdArg((unsigned long) eventTime);
   cmdMessenger.sendCmdArg("R");
   cmdMessenger.sendCmdArg((int) whichOne);
-  cmdMessenger.sendCmdArg((int) wellRewardCounts[i]);  
-  cmdMessenger.sendCmdArg((int) wellCount);  
+  //cmdMessenger.sendCmdArg((int) wellRewardCounts[i]);  
+  //cmdMessenger.sendCmdArg((int) wellCount);  
   cmdMessenger.sendCmdEnd();
+  
+  OnQueryWellLog();
 }
 
 void DoDispense() {
@@ -250,7 +283,7 @@ void CommonMazeSetup(void)
   
   pinMode(triggerPin, OUTPUT);
 
-  Timer1.initialize(16666); // 30 frames per second
+  Timer1.initialize(DEFAULT_FRAMERATE); 
   Timer1.attachInterrupt(triggerCamera); // triggerCamera to run every 0.15 seconds
 
   // Listen on serial connection for messages from the PC

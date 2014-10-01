@@ -1,24 +1,49 @@
 #include "MazeInfoWindow.h"
 #include <QGridLayout>
 #include <QDebug>
+#include <QButtonGroup>
 
-MazeInfoWindow::MazeInfoWindow(QWidget *parent) :
+MazeInfoWindow::MazeInfoWindow(int nWells, QWidget *parent) :
     QDockWidget(parent)
 {
     setAllowedAreas(Qt::RightDockWidgetArea);
     setWindowTitle("Maze Controller Info");
 
 
-    QWidget *container = new QWidget(this);
+    container = new QWidget(this);
     setWidget(container);
 
-    QGridLayout *layout = new QGridLayout(container);
+    layout = new QGridLayout(container);
     container->setLayout(layout);
 
     logWindow = new QPlainTextEdit(container);
     logWindow->setReadOnly(true);
-    layout->addWidget(logWindow,0,0);
+    layout->addWidget(logWindow,1,0,5,1);
 
+    numberOfWells = nWells;
+    for (int i = 0; i < nWells; i++)
+        wellCounts << 0;
+
+    setupWellButtons(nWells);
+
+}
+
+void MazeInfoWindow::setupWellButtons(int nWells)
+{
+    QWidget *buttonContainer = new QWidget(container);
+    layout->addWidget(buttonContainer, 0,0);
+
+    QGridLayout *subLayout = new QGridLayout(buttonContainer);
+    buttonContainer->setLayout(subLayout);
+
+    QButtonGroup *wellButtonGroup = new QButtonGroup(this);
+    for (int i = 0; i < nWells; i++) {
+        QPushButton *button = new QPushButton(this);
+        wellButtons.append(button);
+        subLayout->addWidget(button,0,2*i);
+        button->setText("\n" + QString::number(wellCounts[i]) + "\n");
+        button->setStyleSheet("QPushButton {font-size: 18pt;font-weight: bold;}");
+    }
 }
 
 void MazeInfoWindow::newLogText(QByteArray text)
@@ -40,13 +65,20 @@ void MazeInfoWindow::newFrameTimestampEvent(ulong time, ulong count)
     }
 }
 
-void MazeInfoWindow::newWellVisitEvent(ulong time, char well)
+void MazeInfoWindow::newWellVisitEvent(ulong time, int well)
 {
-    logWindow->appendPlainText("[" + QString::number(time) + "] " + "Visited well " + QString(well));
+    logWindow->appendPlainText("[" + QString::number(time) + "] " + "Visited well " + QString::number(well));
 }
 
-void MazeInfoWindow::newWellRewardEvent(ulong time, char well, int count, int total)
+void MazeInfoWindow::newWellRewardEvent(ulong time, int well)
 {
-    logWindow->appendPlainText("[" + QString::number(time) + "] " + "Rewarded well " + QString(well) +
-                               " (" + QString::number(count) + ", " + QString::number(total) + ")");
+    logWindow->appendPlainText("[" + QString::number(time) + "] " + "Rewarded well " + QString::number(well));
+}
+
+void MazeInfoWindow::newWellCounts(QList<int> newCounts)
+{
+    for (int i = 0; i < newCounts.length(); i++) {
+        wellCounts[i] = newCounts[i];
+        wellButtons.at(i)->setText("\n" + QString::number(wellCounts[i]) + "\n");
+    }
 }

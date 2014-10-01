@@ -10,6 +10,15 @@
 #include "CmdMessenger.h"
 #include "BehaviorInterfaceCommands.h"
 
+#ifdef TESTING
+#define TRIGGER_PIN 13 // LED pin
+#define DEFAULT_FRAMERATE 250000
+#else
+#define TRIGGER_PIN A1 
+#define DEFAULT_FRAMERATE 16666 // 30 FPS
+#endif
+
+
 // Attach a new CmdMessenger object to the default Serial port
 extern CmdMessenger cmdMessenger;
 
@@ -81,6 +90,13 @@ void OnFakeBeamBreak();
 
 // Callback function to clear well counters
 void OnClearWellLog();
+
+// Callback function to query pin sey up
+void OnQueryPins();
+
+// Callback function to report well counters
+void OnQueryWellLog();
+
 
 #endif
 
