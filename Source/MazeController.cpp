@@ -57,7 +57,7 @@ int MazeController::connectToPort(QString portname)
         mutex.lock(); //
         QMetaObject::invokeMethod(serialPortInterface, "sendCommand", Qt::QueuedConnection,
                                   Q_ARG(CommandEnum, kVersion));
-        if(condition.wait(&mutex,10000)) { // wait for 500 milliseconds for response
+        if(condition.wait(&mutex,5000)) { // wait for 500 milliseconds for response
             mutex.unlock();
             qDebug() << "Connected to arduino maze controller." << versionString;
         }
@@ -70,7 +70,7 @@ int MazeController::connectToPort(QString portname)
         mutex.lock(); //
         QMetaObject::invokeMethod(serialPortInterface, "sendCommand", Qt::QueuedConnection,
                                   Q_ARG(CommandEnum, kQueryPins));
-        if(condition.wait(&mutex,10000)) { // wait for 500 milliseconds for response
+        if(condition.wait(&mutex,5000)) { // wait for 500 milliseconds for response
             mutex.unlock();
             qDebug() << "Number of wells: " << numberOfWells;
         }
@@ -101,6 +101,8 @@ void MazeController::initializeLogFile(QString filename)
     // write file header
     logFile->write("# Maze Controller Log File\n");
     logFile->write("# (timestamps are in microseconds)\n");
+    serialPortInterface->logFile = logFile;
+
 }
 
 void MazeController::beginWriting()
@@ -214,12 +216,10 @@ int MazeControllerSerialPort::initialize(QString name)
         return 1;
     }
     port->setBaudRate(QSerialPort::Baud115200);
+    QThread::msleep(1000);
     sendCommand(kEnableTrigger,0);
     sendCommand(kEnableTriggerLogging,0);
     sendCommand(kClearWellLog);
-    port->clear();
-    port->flush();
-    QThread::msleep(500);
     port->clear();
     port->flush();
     connect(port, SIGNAL(readyRead()), this, SLOT(processSerialData()));
@@ -236,6 +236,7 @@ void MazeControllerSerialPort::processSerialData()
     ulong timestamp;
     char eventType;
     QList<int> pins;
+    QList<int> wellLog;
 
     while (!port->atEnd()) {
         QByteArray data;
@@ -292,6 +293,14 @@ void MazeControllerSerialPort::processSerialData()
                             qDebug() << "Unexpected well query command response (even #).";
                         }
                         break;
+                    case (kQueryWellLog):
+                        wellLog.clear();
+                        for (int j = 1; j < parsedCommand.length()-1; j++) { //ignore total (last field)
+                            wellLog.append(parsedCommand.at(j).toInt());
+                        }
+                        emit newRewardCounts(wellLog);
+                        break;
+
                     default:
                         qDebug() << "Unexpected command received." << chunkedCommands.at(i);
                     }

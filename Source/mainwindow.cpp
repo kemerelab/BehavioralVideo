@@ -324,8 +324,8 @@ void MainWindow::openPGCamera(int serialNumber)
     openCamera(pgCamera);
     ((QAction *)cameraMapper->mapping(serialNumber))->setDisabled(true);
 
-    PtGreyInterfaceSettingsWidget *cameraSettings = new PtGreyInterfaceSettingsWidget(pgCamera,settingsDialog);
-    settingsContainer->addTab(cameraSettings, "Camera Settings");
+    //PtGreyInterfaceSettingsWidget *cameraSettings = new PtGreyInterfaceSettingsWidget(pgCamera,settingsDialog);
+    //settingsContainer->addTab(cameraSettings, "Camera Settings");
 
 }
 

@@ -20,6 +20,8 @@ class MazeControllerSerialPort : public QObject
 public:
     explicit MazeControllerSerialPort(QWaitCondition *condition, QObject *parent = 0);
     ~MazeControllerSerialPort(void);
+    QFile *logFile;
+
 private:
     QSerialPort *port;
     QByteArray commandBuffer;
@@ -28,7 +30,6 @@ private:
     bool waitingForResponse;
     CommandEnum expectedResponse;
 
-    QFile *logFile;
     bool loggingEnabled;
 
 
