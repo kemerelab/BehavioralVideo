@@ -16,6 +16,7 @@ void CheckBeamBreaks(void) {
   int counter;
 
   counter = 0;
+  
   for (i = 0; i < nFoodWells; i++) {
     beamBreakFlags[i] = digitalRead(beamBreakPins[i]);
     if (beamBreakFlags[i] == HIGH) {
@@ -82,7 +83,7 @@ void OnUnknownCommand()
 // Report version
 void OnVersion()
 {
-  cmdMessenger.sendCmd(kVersion,"RewardControl v1.0");
+  cmdMessenger.sendCmd(kVersion,"RewardControl v1.1");
   cmdMessenger.sendCmd(kStatus, maze_type); 
 }
 
@@ -289,6 +290,7 @@ void CommonMazeSetup(void)
   // Listen on serial connection for messages from the PC
   Serial.begin(115200); 
   // Adds newline to every command
+  delay(500);
   cmdMessenger.printLfCr();   
 
   // Attach my application's user-defined callback methods
@@ -297,6 +299,8 @@ void CommonMazeSetup(void)
   // Send the status to the PC that says the Arduino has booted
   // Note that this is a good debug function: it will let you also know 
   // if your program had a bug and the arduino restarted  
+  delay(500);
   OnVersion();
+
 }
 

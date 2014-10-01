@@ -12,7 +12,6 @@
  
  */
 
-#define TESTING
 #include "MazeControlFunctions.h"
 
 const int nFoodWells = 3;
@@ -58,8 +57,10 @@ void loop() {
            ( (lastLastWell == wellA) && (lastWell == wellB) && (activatedWell == wellC) ) ||
            ( (lastLastWell == wellC) && (lastWell == wellB) && (activatedWell == wellA) ) ||
            ( (lastWell == wellA) && (activatedWell == wellB) ) ||
-           ( (lastWell == wellC) && (activatedWell == wellB) ) )
+           ( (lastWell == wellC) && (activatedWell == wellB) ) ) {
+        wellRewardCounts[activatedWell]++;
         RewardWell(activatedWell);
+           }
 
       lastLastWell = lastWell;
       lastWell = activatedWell;
