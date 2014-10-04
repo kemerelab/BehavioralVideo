@@ -1,12 +1,7 @@
-#include "ptgreyinterface.h"
+#include "PtGrey.h"
 
+#include <QString>
 #include <QDebug>
-#include <QThread>
-
-#include <QtCore/QString>
-#include <QtCore/QFile>
-#include <QtCore/QDebug>
-#include <QtCore/QTextStream>
 
 //unsigned int registers[590];    //for dumping camera registers to
 

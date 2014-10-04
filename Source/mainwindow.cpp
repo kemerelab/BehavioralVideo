@@ -1,8 +1,8 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "serialcameracontroller.h"
-#include "threads.h"
+#include "SerialCameraController.h"
+#include "Threads.h"
 #include "dummycameracontroller.h"
 
 #include <QThread>

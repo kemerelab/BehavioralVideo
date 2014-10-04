@@ -1,4 +1,4 @@
-#include "videowriter.h"
+#include "VideoWriter.h"
 #include <QDebug>
 #include <QThread>
 

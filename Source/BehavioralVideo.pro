@@ -22,27 +22,25 @@ QMAKE_CFLAGS += -g -O3
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    videowidget.cpp \
-    videoglwidget.cpp \
-    videowriter.cpp \
-    fakecamerainterface.cpp \
-    ptgreyinterface.cpp \
-    dummycameracontroller.cpp \
-    serialcameracontroller.cpp \
-    GenericCamera.cpp \
+    VideoGLWidget.cpp \
+    VideoWriter.cpp \
+    CameraInterfaces/FakeCamera.cpp \
+    CameraInterfaces/PtGrey.cpp \
+    DummyCameraController.cpp \
+    SerialCameraController.cpp \
+    CameraInterfaces/GenericCamera.cpp \
     GenericCameraController.cpp \
-    datacontroller.cpp
+    DataController.cpp
 
 HEADERS  += mainwindow.h \
-    videowidget.h \
-    ffmpeg.h \
-    videoglwidget.h \
-    videowriter.h \
-    fakecamerainterface.h \
-    ptgreyinterface.h \
-    threads.h \
-    dummycameracontroller.h \
-    serialcameracontroller.h \
+    FFMPEG.h \
+    VideoGLWidget.h \
+    VideoWriter.h \
+    CameraInterfaces/FakeCamera.h \
+    CameraInterfaces/PtGrey.h \
+    Threads.h \
+    DummyCameraController.h \
+    SerialCameraController.h \
     GenericCamera.h \
     GenericCameraController.h \
     datacontroller.h

@@ -1,4 +1,4 @@
-#include "serialcameracontroller.h"
+#include "SerialCameraController.h"
 #include <QDebug>
 
 bool isSerialControllerConnected()

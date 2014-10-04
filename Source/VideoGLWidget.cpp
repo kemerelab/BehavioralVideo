@@ -1,7 +1,6 @@
-#include "videoglwidget.h"
+#include "VideoGLWidget.h"
 
 #include <QtCore/QCoreApplication>
-
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLPaintDevice>
 #include <QtGui/QPainter>

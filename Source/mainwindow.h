@@ -3,13 +3,11 @@
 #include <QSignalMapper>
 #include <QMainWindow>
 #include <QGridLayout>
-#include "datacontroller.h"
-#include "videowidget.h"
-#include "videoglwidget.h"
-#include "videowriter.h"
-#include "ptgreyinterface.h"
-#include "fakecamerainterface.h"
-#include <QSerialPort>
+#include "DataController.h"
+#include "VideoGLWidget.h"
+#include "VideoWriter.h"
+#include "CameraInterfaces/PtGrey.h"
+#include "CameraInterfaces/FakeCamera.h"
 #include "GenericCameraController.h"
 
 #include <QHash>

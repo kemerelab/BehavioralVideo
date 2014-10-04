@@ -2,10 +2,9 @@
 #define PTGREYINTERFACE_H
 
 #include <QObject>
-#include "ffmpeg.h"
+#include "FFMPEG.h"
 #include <FlyCapture2.h>
 #include <QImage>
-#include "videowriter.h"
 #include "GenericCamera.h"
 
 
