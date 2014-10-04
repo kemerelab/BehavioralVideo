@@ -26,7 +26,7 @@ SOURCES += main.cpp\
     VideoWriter.cpp \
     CameraInterfaces/FakeCamera.cpp \
     CameraInterfaces/PtGrey.cpp \
-    DummyCameraController.cpp \
+    dummycameracontroller.cpp \
     SerialCameraController.cpp \
     CameraInterfaces/GenericCamera.cpp \
     GenericCameraController.cpp \
@@ -39,7 +39,7 @@ HEADERS  += mainwindow.h \
     CameraInterfaces/FakeCamera.h \
     CameraInterfaces/PtGrey.h \
     Threads.h \
-    DummyCameraController.h \
+    dummycameracontroller.h \
     SerialCameraController.h \
     GenericCamera.h \
     GenericCameraController.h \
@@ -47,4 +47,7 @@ HEADERS  += mainwindow.h \
     DataController.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    icons.qrc
 

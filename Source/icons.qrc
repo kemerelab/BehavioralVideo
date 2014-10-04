@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>icons/emblem-system.svg</file>
+        <file>icons/media-record.svg</file>
+        <file>icons/media-playback-stop.svg</file>
+        <file>icons/media-eject.svg</file>
+    </qresource>
+</RCC>

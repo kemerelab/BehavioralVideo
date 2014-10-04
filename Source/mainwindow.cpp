@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QMenuBar>
 #include <QErrorMessage>
+#include <QToolBar>
 
 #include <QtUiTools/QtUiTools>
 
@@ -92,9 +93,16 @@ MainWindow::MainWindow(QWidget *parent) :
     videoContainer = new QWidget(this);
     layout->addWidget(videoContainer,0,0);
     videoContainer->setStyleSheet("QWidget {background: light gray}");
-    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
-    vContainerLayout->addWidget(container,0,0);
+    QToolBar *toolBar = new QToolBar(videoContainer);
+    toolBar->addAction(ui->actionOpenVideoFile);
+    toolBar->addAction(ui->actionRecord);
+    toolBar->addAction(ui->actionStop);
+    toolBar->setAllowedAreas(Qt::TopToolBarArea);
+    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
+    vContainerLayout->addWidget(toolBar);
+    vContainerLayout->setSpacing(0);
+    vContainerLayout->addWidget(container);
 }
 
 MainWindow::~MainWindow()
