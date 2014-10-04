@@ -5,10 +5,6 @@
 #include <QThread>
 #include <QDebug>
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 QT_USE_NAMESPACE
 
 QThread cameraThread0;

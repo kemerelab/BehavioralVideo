@@ -2,12 +2,9 @@
 
 #include <QString>
 #include <QDebug>
-<<<<<<< HEAD:Source/ptgreyinterface.cpp
 #include <QFormLayout>
 #include <QLabel>
 #include <QTextEdit>
-=======
->>>>>>> master:Source/CameraInterfaces/PtGrey.cpp
 
 //unsigned int registers[590];    //for dumping camera registers to
 

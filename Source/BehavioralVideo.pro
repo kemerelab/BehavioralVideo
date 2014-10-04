@@ -26,11 +26,12 @@ SOURCES += main.cpp\
     VideoWriter.cpp \
     CameraInterfaces/FakeCamera.cpp \
     CameraInterfaces/PtGrey.cpp \
-    DummyCameraController.cpp \
-    SerialCameraController.cpp \
+    dummycameracontroller.cpp \
     CameraInterfaces/GenericCamera.cpp \
     GenericCameraController.cpp \
-    DataController.cpp
+    DataController.cpp \
+    MazeController.cpp \
+    MazeInfoWindow.cpp
 
 HEADERS  += mainwindow.h \
     FFMPEG.h \
@@ -39,12 +40,12 @@ HEADERS  += mainwindow.h \
     CameraInterfaces/FakeCamera.h \
     CameraInterfaces/PtGrey.h \
     Threads.h \
-    DummyCameraController.h \
-    SerialCameraController.h \
+    dummycameracontroller.h \
     GenericCamera.h \
     GenericCameraController.h \
-    datacontroller.h \
-    DataController.h
+    DataController.h \
+    MazeController.h \
+    MazeInfoWindow.h
 
 FORMS    += mainwindow.ui
 

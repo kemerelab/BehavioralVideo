@@ -2,12 +2,8 @@
 #define PTGREYINTERFACE_H
 
 #include <QObject>
-<<<<<<< HEAD:Source/ptgreyinterface.h
 #include <QWidget>
-#include "ffmpeg.h"
-=======
 #include "FFMPEG.h"
->>>>>>> master:Source/CameraInterfaces/PtGrey.h
 #include <FlyCapture2.h>
 #include <QImage>
 #include "GenericCamera.h"

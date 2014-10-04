@@ -1,12 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-<<<<<<< HEAD
-#include "threads.h"
-=======
-#include "SerialCameraController.h"
 #include "Threads.h"
->>>>>>> master
 #include "dummycameracontroller.h"
 #include "MazeController.h"
 #include "MazeInfoWindow.h"
@@ -111,7 +106,6 @@ MainWindow::MainWindow(QWidget *parent) :
     videoContainer = new QWidget(this);
     layout->addWidget(videoContainer,0,0);
     videoContainer->setStyleSheet("QWidget {background: light gray}");
-<<<<<<< HEAD
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
     QToolBar *toolBar = new QToolBar(videoContainer);
     toolBar->addAction(ui->actionPreferences);
@@ -123,14 +117,6 @@ MainWindow::MainWindow(QWidget *parent) :
     vContainerLayout->addWidget(toolBar);
     vContainerLayout->setSpacing(0);
     vContainerLayout->addWidget(container);
-
-
-
-=======
-    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
-    QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
-    vContainerLayout->addWidget(container,0,0);
->>>>>>> master
 }
 
 MainWindow::~MainWindow()
