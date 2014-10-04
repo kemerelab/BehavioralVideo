@@ -43,7 +43,8 @@ HEADERS  += mainwindow.h \
     SerialCameraController.h \
     GenericCamera.h \
     GenericCameraController.h \
-    datacontroller.h
+    datacontroller.h \
+    DataController.h
 
 FORMS    += mainwindow.ui
 
