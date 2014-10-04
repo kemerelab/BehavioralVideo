@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QImage>
 #include <QFile>
-#include "ffmpeg.h"
+#include "FFMPEG.h"
 
 enum VideoCompressionFormat {
     MPEG2,

@@ -11,3 +11,7 @@ GenericCameraController::~GenericCameraController()
 {
 
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> master

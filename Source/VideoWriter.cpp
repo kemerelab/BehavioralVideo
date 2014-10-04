@@ -1,4 +1,4 @@
-#include "videowriter.h"
+#include "VideoWriter.h"
 #include <QDebug>
 #include <QThread>
 
@@ -154,8 +154,6 @@ void VideoWriter::newFrame(QImage image)
         initialize(*vFilename);
     if (currentlyWriting) {
         currentFrame = &image;
-
-        int i;
 
         AVCodecContext *c = video_st->codec;
         avpicture_fill((AVPicture *)tmp_picture, currentFrame->bits(),

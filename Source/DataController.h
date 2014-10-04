@@ -3,8 +3,8 @@
 
 #include "GenericCamera.h"
 #include "GenericCameraController.h"
-#include "videowriter.h"
-#include "videoglwidget.h"
+#include "VideoWriter.h"
+#include "VideoGLWidget.h"
 #include <QList>
 #include <QPainter>
 

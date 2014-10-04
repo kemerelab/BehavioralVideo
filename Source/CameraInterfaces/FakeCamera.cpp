@@ -1,4 +1,4 @@
-#include "fakecamerainterface.h"
+#include "FakeCamera.h"
 #include <QDebug>
 
 FakeVideoGenerator::FakeVideoGenerator(QObject *parent) :

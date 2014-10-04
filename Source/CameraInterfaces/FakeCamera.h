@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QImage>
 #include <QTimer>
-#include "ffmpeg.h"
+#include "FFMPEG.h"
 #include "GenericCamera.h"
 
 class FakeVideoGenerator : public GenericCameraInterface

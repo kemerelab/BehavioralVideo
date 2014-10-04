@@ -3,6 +3,7 @@
 #include <QSignalMapper>
 #include <QMainWindow>
 #include <QGridLayout>
+<<<<<<< HEAD
 #include <QDialog>
 #include <QSerialPort>
 #include <QTabWidget>
@@ -13,6 +14,13 @@
 #include "videowriter.h"
 #include "ptgreyinterface.h"
 #include "fakecamerainterface.h"
+=======
+#include "DataController.h"
+#include "VideoGLWidget.h"
+#include "VideoWriter.h"
+#include "CameraInterfaces/PtGrey.h"
+#include "CameraInterfaces/FakeCamera.h"
+>>>>>>> master
 #include "GenericCameraController.h"
 #include "MazeInfoWindow.h"
 
@@ -82,6 +90,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
+
+    QWidget *videoContainer;
 
     QWidget *videoContainer;
 

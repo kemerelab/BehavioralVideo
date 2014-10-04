@@ -1,7 +1,12 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+<<<<<<< HEAD
 #include "threads.h"
+=======
+#include "SerialCameraController.h"
+#include "Threads.h"
+>>>>>>> master
 #include "dummycameracontroller.h"
 #include "MazeController.h"
 #include "MazeInfoWindow.h"
@@ -38,8 +43,6 @@ MainWindow::MainWindow(QWidget *parent) :
     numCamerasInitialized = 0;
     numCamerasCapturing = 0;
     controllerInitialized = false;
-    bool firmware = false;
-    bool hardware = false;
     triggerType = NO_SELECTION;
 
     connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(showPreferencesDialog()));
@@ -108,6 +111,7 @@ MainWindow::MainWindow(QWidget *parent) :
     videoContainer = new QWidget(this);
     layout->addWidget(videoContainer,0,0);
     videoContainer->setStyleSheet("QWidget {background: light gray}");
+<<<<<<< HEAD
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
     QToolBar *toolBar = new QToolBar(videoContainer);
     toolBar->addAction(ui->actionPreferences);
@@ -122,6 +126,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
+=======
+    QGridLayout *vContainerLayout = new QGridLayout(videoContainer);
+    QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
+    vContainerLayout->addWidget(container,0,0);
+>>>>>>> master
 }
 
 MainWindow::~MainWindow()

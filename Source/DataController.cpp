@@ -1,5 +1,5 @@
-#include "datacontroller.h"
-#include "threads.h"
+#include "DataController.h"
+#include "Threads.h"
 #include <QDebug>
 
 DataController::DataController(QObject *parent) :

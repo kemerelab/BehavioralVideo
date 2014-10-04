@@ -42,10 +42,14 @@
     <addaction name="separator"/>
     <addaction name="menuOpenCamera"/>
     <addaction name="menuOpenController"/>
+<<<<<<< HEAD
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="actionQuit"/>
+=======
+>>>>>>> master
     <addaction name="separator"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuVideo">
     <property name="title">

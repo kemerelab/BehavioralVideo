@@ -3,10 +3,12 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QThread>
-#include <QTimer>
 #include <QDebug>
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 QT_USE_NAMESPACE
 
 QThread cameraThread0;

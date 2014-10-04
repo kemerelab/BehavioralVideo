@@ -2,9 +2,9 @@
 #define GENERIC_CAMERA_H
 
 #include <QObject>
-#include "ffmpeg.h"
+#include "FFMPEG.h"
 #include <QImage>
-#include "videowriter.h"
+#include "VideoWriter.h"
 
 class GenericCameraInterface : public QObject
 {
