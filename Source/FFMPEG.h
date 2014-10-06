@@ -10,4 +10,6 @@ extern "C"{
 }
 //}
 
+Q_DECLARE_METATYPE(AVCodecID)
+
 #endif // FFMPEG_H

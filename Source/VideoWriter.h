@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QImage>
 #include <QFile>
+#include <QTabWidget>
+#include <QComboBox>
 #include "FFMPEG.h"
 
 class VideoWriter : public QObject
@@ -11,7 +13,7 @@ class VideoWriter : public QObject
     Q_OBJECT
 public:
     explicit VideoWriter(QObject *parent = 0);
-
+    void addPreferencesPanel(QTabWidget *preferencesTabs);
 
 signals:
     void videoInitialized(void);
@@ -47,6 +49,10 @@ private:
 
     uint8_t *video_outbuf;
     int video_outbuf_size;
+
+    QString videoExt = ".mp4";
+    QWidget *prefWidget;
+    QComboBox *videoEncoder;
 };
 
 Q_DECLARE_METATYPE(VideoWriter*)

@@ -27,7 +27,7 @@ class DataController : public QObject
 {
     Q_OBJECT
 public:
-    explicit DataController(QObject *parent = 0);
+    explicit DataController(VideoWriter* writer, QObject *parent = 0);
 
 signals:
     void updateSavingMenus(SavingState);
@@ -49,7 +49,7 @@ public slots:
 
 private:
     QList<GenericCameraInterface *> cameraList;
-    QList<VideoWriter *> videoWriterList;
+    VideoWriter *videoWriter;
     GenericCameraController *cameraController;
     VideoGLWidget *videoWidget;
     int numCameras;

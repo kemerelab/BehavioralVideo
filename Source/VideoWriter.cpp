@@ -1,6 +1,9 @@
-#include "VideoWriter.h"
+﻿#include "VideoWriter.h"
 #include <QDebug>
 #include <QThread>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QComboBox>
 
 VideoWriter::VideoWriter(QObject *parent) :
     QObject(parent)
@@ -12,6 +15,23 @@ VideoWriter::VideoWriter(QObject *parent) :
     currentFrame = NULL;
     waitingToInitialize = false;
     currentlyWriting = false;
+}
+
+void VideoWriter::addPreferencesPanel(QTabWidget *preferencesTabs)
+{
+    prefWidget = new QWidget(preferencesTabs->parentWidget());
+
+    QLineEdit *defaultExtension = new QLineEdit(videoExt,prefWidget);
+    videoEncoder = new QComboBox(prefWidget);
+    videoEncoder->addItem("MPEG1",QVariant((unsigned int) AV_CODEC_ID_MPEG1VIDEO));
+    videoEncoder->addItem("MPEG2",QVariant((unsigned int) AV_CODEC_ID_MPEG2VIDEO));
+    videoEncoder->addItem("H264",QVariant((unsigned int) AV_CODEC_ID_H264));
+    videoEncoder->setCurrentIndex(1); // MPEG2
+
+    QFormLayout *layout = new QFormLayout(prefWidget);
+    layout->addRow("Default File Extension", defaultExtension);
+    layout->addRow("Video Encoder", videoEncoder);
+    preferencesTabs->addTab(prefWidget,"Video Writer");
 }
 
 void VideoWriter::initialize(QString filename)
@@ -34,7 +54,7 @@ void VideoWriter::initialize(QString filename)
         if (!fmt) {
             qCritical() << "Error initializing fmt.";
         }
-        fmt->video_codec = CODEC_ID_MPEG2VIDEO; // force MPEG video otherwise, default for mp4 is h264
+        fmt->video_codec = (AVCodecID) videoEncoder->currentData().value<unsigned int>();
 
         /* allocate the output media context */
         oc = avformat_alloc_context();

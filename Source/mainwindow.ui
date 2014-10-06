@@ -44,6 +44,7 @@
     <addaction name="menuOpenCamera"/>
     <addaction name="menuOpenController"/>
     <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuVideo">
@@ -164,6 +165,18 @@
   <action name="actionFakeCamera">
    <property name="text">
     <string>Fake Camera</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/emblem-system.svg</normaloff>:/images/icons/emblem-system.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
  </widget>

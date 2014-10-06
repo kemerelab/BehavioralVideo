@@ -4,10 +4,6 @@
 #include <QMainWindow>
 #include <QGridLayout>
 #include "DataController.h"
-#include "VideoGLWidget.h"
-#include "VideoWriter.h"
-#include "CameraInterfaces/PtGrey.h"
-#include "CameraInterfaces/FakeCamera.h"
 #include "GenericCameraController.h"
 
 #include <QHash>
@@ -25,7 +21,7 @@ public:
     ~MainWindow();
     GenericCameraController *controller;
 
-    QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
+    //QHash<unsigned int, PtGreyInterface *> cameraInterfaces;
     uint widgetx;
     uint widgety;
     uint numCameras;
@@ -36,8 +32,8 @@ public slots:
     void openController();
     void openFakeVideo();
     void openPGCamera(int serialNumber);
+    void openV4L2Camera(QString device);
     void openCamera(GenericCameraInterface *camera);
-    void selectPin(QString);
 
     void updateVideoMenus(SavingState state);
 
@@ -67,6 +63,8 @@ private:
     Ui::MainWindow *ui;
     QGridLayout *layout;
     QString name;
+
+    QTabWidget *prefTabWidget;
 
     QWidget *videoContainer;
 

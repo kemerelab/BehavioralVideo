@@ -4,6 +4,12 @@
 #include "SerialCameraController.h"
 #include "Threads.h"
 #include "dummycameracontroller.h"
+#include "VideoGLWidget.h"
+#include "VideoWriter.h"
+#include "CameraInterfaces/PtGrey.h"
+#include "CameraInterfaces/SupportedCamera.h"
+#include "CameraInterfaces/FakeCamera.h"
+
 
 #include <QThread>
 #include <QTimer>
@@ -14,6 +20,10 @@
 #include <QMenuBar>
 #include <QErrorMessage>
 #include <QToolBar>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QDialogButtonBox>
+#include <QTabWidget>
 
 #include <QtUiTools/QtUiTools>
 
@@ -46,13 +56,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionFakeCamera,SIGNAL(triggered()),this,SLOT(openFakeVideo()));
 
+    cameraMapper = new QSignalMapper(this);
+
     //detect Point Grey cameras and add to menu
     QStringList *cameraNameList = new QStringList;
     FindPointGreyCameras(cameraNameList);
     qDebug() << "Number of cameras found " << cameraNameList->size();
     if (cameraNameList->size() > 0) {
         ui->menuOpenCamera->addSection("PointGrey Cameras");
-        cameraMapper = new QSignalMapper(this);
         for (int x=0; x < cameraNameList->size(); x++)
         {
             QAction *action = new QAction("Point Grey " + cameraNameList->at(x),this);
@@ -66,11 +77,48 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->menuOpenCamera->addSection("No PointGrey Cameras Found");
     }
 
+    cameraNameList->clear();
+    FindSupportedCameras(cameraNameList);
+    qDebug() << "Number of v4l2 cameras found " << cameraNameList->size();
+    if (cameraNameList->size() > 0) {
+        ui->menuOpenCamera->addSection("V4L2 Cameras");
+        cameraMapper = new QSignalMapper(this);
+        for (int x=0; x < cameraNameList->size(); x++)
+        {
+            QAction *action = new QAction(cameraNameList->at(x),this);
+            ui->menuOpenCamera->addAction(action);
+            connect(action, SIGNAL(triggered()),cameraMapper,SLOT(map()));
+            cameraMapper->setMapping(action,cameraNameList->at(x));
+        }
+        connect(cameraMapper,SIGNAL(mapped(QString)),this,SLOT(openV4L2Camera(QString)));
+    }
+    else {
+        ui->menuOpenCamera->addSection("No PointGrey Cameras Found");
+    }
     ui->centralWidget->setLayout(layout);
 
-    connect(ui->actionFakeVideo, SIGNAL(triggered()), this, SLOT(openFakeVideo()));
 
-    dataController = new(DataController);
+    QDialog *preferencesWindow = new QDialog();
+    QDialogButtonBox *prefButtons = new QDialogButtonBox(QDialogButtonBox::Ok, preferencesWindow);
+    connect(prefButtons, SIGNAL(accepted()), preferencesWindow, SLOT(accept()));
+    prefTabWidget = new QTabWidget(preferencesWindow);
+    QWidget *generalPrefs = new QWidget(preferencesWindow);
+    prefTabWidget->addTab(generalPrefs,"General");
+    QVBoxLayout *prefVBox = new QVBoxLayout(preferencesWindow);
+    prefVBox->addWidget(prefTabWidget,1);
+    prefVBox->addWidget(prefButtons);
+
+    connect(ui->actionPreferences, SIGNAL(triggered()), preferencesWindow, SLOT(show()));
+
+    VideoWriter *writer = new VideoWriter();
+    QThread *thread = new QThread();
+    connect(this, SIGNAL(destroyed()), thread, SLOT(deleteLater()));
+    thread->setObjectName("Behavioral Video Video Compression");
+    thread->start();
+    writer->moveToThread(thread);
+    writer->addPreferencesPanel(prefTabWidget);
+
+    dataController = new DataController(writer,0);
     dataController->moveToThread(&dataControllerThread);
 
     connect(ui->actionOpenVideoFile, SIGNAL(triggered()), this, SLOT(openVideoFile()));
@@ -230,40 +278,23 @@ void MainWindow::openPGCamera(int serialNumber)
         return;
     }
 
-    /*
-        //add camera to camer menu
-
-        ui->menuCamera->addAction((QAction *)cameraMapper->mapping(serialnumber));
-
-        //add settings to camera menu
-        QMenu *settingMenu = new QMenu();
-        QMenu *triggerMenu = new QMenu("Trigger Pin");
-        QAction *pinAction0 = new QAction("Pin 0",this);
-        QAction *pinAction1 = new QAction("Pin 1",this);
-        QAction *pinAction2 = new QAction("Pin 2",this);
-        QAction *pinAction3 = new QAction("Pin 3",this);
-        triggerMenu->addAction(pinAction0);
-        triggerMenu->addAction(pinAction1);
-        triggerMenu->addAction(pinAction2);
-        triggerMenu->addAction(pinAction3);
-        settingMenu->addMenu(triggerMenu);
-        ((QAction *)cameraMapper->mapping(serialnumber))->setMenu(settingMenu);
-        QSignalMapper* pinMapper =  new QSignalMapper(this);
-        pinMapper->setMapping(pinAction0,"0" + QString::number(serialnumber));
-        pinMapper->setMapping(pinAction1,"1" + QString::number(serialnumber));
-        pinMapper->setMapping(pinAction2,"2" + QString::number(serialnumber));
-        pinMapper->setMapping(pinAction3,"3" + QString::number(serialnumber));
-        connect(pinAction0, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinAction1, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinAction2, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinAction3, SIGNAL(triggered()),pinMapper,SLOT(map()));
-        connect(pinMapper,SIGNAL(mapped(QString)),this,SLOT(selectPin(QString)));
-        */
-
     PtGreyInterface* pgCamera = new PtGreyInterface();
     pgCamera->serialNumber = serialNumber;
     openCamera(pgCamera);
     ((QAction *)cameraMapper->mapping(serialNumber))->setDisabled(true);
+}
+
+void MainWindow::openV4L2Camera(QString device)
+{
+    if (!controllerInitialized) {
+        QMessageBox::warning(this, "Controller Not Selected", "No Controller Selected");
+        return;
+    }
+
+    SupportedCamera *v4l2Camera = new SupportedCamera(device,prefTabWidget,0);
+    openCamera(v4l2Camera);
+    ((QAction *)cameraMapper->mapping(device))->setDisabled(true);
+
 }
 
 void MainWindow::openFakeVideo()
@@ -274,7 +305,7 @@ void MainWindow::openFakeVideo()
     }
 
     FakeVideoGenerator *fakeCamera = new FakeVideoGenerator();
-    fakeCamera->cameraName = QString::number(numCameras);
+    fakeCamera->cameraName = "Test " + QString::number(numCameras);
     openCamera(fakeCamera);
 }
 
@@ -282,29 +313,20 @@ void MainWindow::openCamera(GenericCameraInterface *camera)
 {
     QMetaObject::invokeMethod(dataController, "stopVideo", Qt::QueuedConnection);
 
-    if (numCameras == 1){ // we already have opened one camera!
-        camera->moveToThread(&cameraThread1);
-    }
-    else{
-        camera->moveToThread(&cameraThread0);
-    }
+    QThread *thread = new QThread();
+    connect(this, SIGNAL(destroyed()), thread, SLOT(deleteLater()));
+    thread->setObjectName("Behavioral Video Camera [" + camera->cameraName + "]");
+    thread->start();
+    camera->moveToThread(thread);
 
     qRegisterMetaType<GenericCameraInterface*>("GenericCameraInterface*");
     QMetaObject::invokeMethod(dataController, "registerCamera",
                               Qt::QueuedConnection, Q_ARG(GenericCameraInterface*, camera));
 
-    //cameraInterfaces.insert(serialNumber,pgCamera);
     QMetaObject::invokeMethod(camera, "Initialize", Qt::QueuedConnection);
     numCameras++;
 
     QMetaObject::invokeMethod(dataController, "startVideoViewing", Qt::QueuedConnection);
-//    emit startCaptureAsync();
-}
-
-void MainWindow::selectPin(QString id){
-    qDebug() << "Setting " + id.mid(1) + " to trigger off pin "+ id.left(1);
-    PtGreyInterface* tempPGCamera = cameraInterfaces[id.mid(1).toInt()];
-    QMetaObject::invokeMethod(tempPGCamera, "ChangeTriggerPin", Qt::QueuedConnection,Q_ARG(int, id.left(1).toInt()));
 }
 
 

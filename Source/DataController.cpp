@@ -2,7 +2,7 @@
 #include "Threads.h"
 #include <QDebug>
 
-DataController::DataController(QObject *parent) :
+DataController::DataController(VideoWriter* writer, QObject *parent) :
     QObject(parent)
 {
     numCameras = 0;
@@ -13,6 +13,8 @@ DataController::DataController(QObject *parent) :
 
     frameConcatenationState = NOT_STARTED;
     concatenatingFrameInitialized = false;
+
+    videoWriter = writer;
 }
 
 
@@ -33,9 +35,7 @@ void DataController::stopVideo()
 void DataController::stopVideoWriting()
 {
     stopVideo();
-    for (int i = 0; i < videoWriterList.length(); i++) {
-        QMetaObject::invokeMethod(videoWriterList.at(i), "endWriting", Qt::BlockingQueuedConnection);
-    }
+    QMetaObject::invokeMethod(videoWriter, "endWriting", Qt::BlockingQueuedConnection);
     startVideoStreaming(false);
     emit updateSavingMenus(NOT_SAVING);
 
@@ -44,7 +44,7 @@ void DataController::stopVideoWriting()
 
 void DataController::initializeVideoWriting(QString filename)
 {
-    QMetaObject::invokeMethod(videoWriterList.at(0), "initialize", Qt::BlockingQueuedConnection,
+    QMetaObject::invokeMethod(videoWriter, "initialize", Qt::BlockingQueuedConnection,
                               Q_ARG(QString, (QString)(filename)));
     emit updateSavingMenus(READY_TO_WRITE);
 }
@@ -54,10 +54,7 @@ void DataController::startVideoStreaming(bool writeToDisk)
     stopVideo();
 
     if (writeToDisk) {
-        for (int i = 0; i < videoWriterList.length(); i++) {
-            QMetaObject::invokeMethod(videoWriterList.at(i), "beginWriting", Qt::BlockingQueuedConnection);
-        }
-
+        QMetaObject::invokeMethod(videoWriter, "beginWriting", Qt::BlockingQueuedConnection);
     }
     if ((cameraController != NULL) && (triggerType == EXTERNAL_CAMERA_TRIGGER)) {
         QMetaObject::invokeMethod(cameraController, "startTriggerSync", Qt::BlockingQueuedConnection);
@@ -87,19 +84,15 @@ void DataController::registerCamera(GenericCameraInterface *camera)
     numCameras++;
 
     if (numCameras == 1) {
-        VideoWriter *writer = new VideoWriter();
-        writer->moveToThread(&videoWriterThread0);
-        videoWriterList.append(writer);
-
         connect(camera, SIGNAL(newFrame(QImage)), videoWidget, SLOT(newFrame(QImage)));
-        connect(camera, SIGNAL(newFrame(QImage)), writer, SLOT(newFrame(QImage)));
+        connect(camera, SIGNAL(newFrame(QImage)), videoWriter, SLOT(newFrame(QImage)));
     } else if (numCameras == 2) {
         qDebug() << "Deregistering";
         disconnect(cameraList.at(0), SIGNAL(newFrame(QImage)), videoWidget, SLOT(newFrame(QImage)));
-        disconnect(cameraList.at(0), SIGNAL(newFrame(QImage)), videoWriterList.at(0), SLOT(newFrame(QImage)));
+        disconnect(cameraList.at(0), SIGNAL(newFrame(QImage)), videoWriter, SLOT(newFrame(QImage)));
         qDebug() << "Re-registering";
         connect(this, SIGNAL(newFrame(QImage)), videoWidget, SLOT(newFrame(QImage)));
-        connect(this, SIGNAL(newFrame(QImage)), videoWriterList.at(0), SLOT(newFrame(QImage)));
+        connect(this, SIGNAL(newFrame(QImage)), videoWriter, SLOT(newFrame(QImage)));
         connect(cameraList.at(0), SIGNAL(newFrame(QImage)), this, SLOT(newLeftFrame(QImage)));
         connect(cameraList.at(1), SIGNAL(newFrame(QImage)), this, SLOT(newRightFrame(QImage)));
     }
