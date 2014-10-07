@@ -14,7 +14,7 @@
 
 #include "MazeControlFunctions.h"
 
-const int nFoodWells = 3;
+const int nFoodWells = 2;
 int beamBreakPins[nFoodWells] = {A4, A5};
 int beamBreakFlags[nFoodWells] = {0, 0};
 int pumpPins[nFoodWells] = {6, 7};
