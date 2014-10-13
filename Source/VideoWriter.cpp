@@ -89,14 +89,13 @@ void VideoWriter::initialize(QString filename)
 
         // Stuff to try to force high quality encoding
         if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
-            c->qmax = 1; // low is better, so frame-by-frame force high quality
+            c->qmin = 1; // low is better, so frame-by-frame force high quality
+            c->qmax = 2; // set this to 1 for highest quality
             /* just for testing, we also get rid of B frames */
             //c->max_b_frames = 0;
-            //c->gop_size = 1; /* emit one intra frame every n frames at most */
-            //c->bit_rate = 6000000;
         }
         else if (c->codec_id == AV_CODEC_ID_H264) {
-            av_opt_set(c->priv_data, "preset", "ultrafast",0);
+            av_opt_set(c->priv_data, "preset", "veryfast",0); // ultrafast and superfast also work
             //c->qmax = 18;
             //c->qmin = 18;
         }
