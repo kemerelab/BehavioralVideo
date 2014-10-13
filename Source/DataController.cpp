@@ -84,17 +84,17 @@ void DataController::registerCamera(GenericCameraInterface *camera)
     numCameras++;
 
     if (numCameras == 1) {
-        connect(camera, SIGNAL(newFrame(QImage)), videoWidget, SLOT(newFrame(QImage)));
-        connect(camera, SIGNAL(newFrame(QImage)), videoWriter, SLOT(newFrame(QImage)));
+        connect(camera, SIGNAL(newFrame(QVideoFrame)), videoWidget, SLOT(newFrame(QVideoFrame)));
+        connect(camera, SIGNAL(newFrame(QVideoFrame)), videoWriter, SLOT(newFrame(QVideoFrame)));
     } else if (numCameras == 2) {
         qDebug() << "Deregistering";
-        disconnect(cameraList.at(0), SIGNAL(newFrame(QImage)), videoWidget, SLOT(newFrame(QImage)));
-        disconnect(cameraList.at(0), SIGNAL(newFrame(QImage)), videoWriter, SLOT(newFrame(QImage)));
+        disconnect(cameraList.at(0), SIGNAL(newFrame(QVideoFrame)), videoWidget, SLOT(newFrame(QVideoFrame)));
+        disconnect(cameraList.at(0), SIGNAL(newFrame(QVideoFrame)), videoWriter, SLOT(newFrame(QVideoFrame)));
         qDebug() << "Re-registering";
-        connect(this, SIGNAL(newFrame(QImage)), videoWidget, SLOT(newFrame(QImage)));
-        connect(this, SIGNAL(newFrame(QImage)), videoWriter, SLOT(newFrame(QImage)));
-        connect(cameraList.at(0), SIGNAL(newFrame(QImage)), this, SLOT(newLeftFrame(QImage)));
-        connect(cameraList.at(1), SIGNAL(newFrame(QImage)), this, SLOT(newRightFrame(QImage)));
+        connect(this, SIGNAL(newFrame(QVideoFrame)), videoWidget, SLOT(newFrame(QImage)));
+        connect(this, SIGNAL(newFrame(QVideoFrame)), videoWriter, SLOT(newFrame(QImage)));
+        connect(cameraList.at(0), SIGNAL(newFrame(QVideoFrame)), this, SLOT(newLeftFrame(QVideoFrame)));
+        connect(cameraList.at(1), SIGNAL(newFrame(QVideoFrame)), this, SLOT(newRightFrame(QVideoFrame)));
     }
 
     qDebug() << "Camera registered " << camera->cameraName << " #" << numCameras;

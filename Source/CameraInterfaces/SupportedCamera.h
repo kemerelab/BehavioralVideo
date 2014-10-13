@@ -3,11 +3,12 @@
 
 #include <QObject>
 #include <QWidget>
-#include <QCamera>
+//#include <QCamera>
 #include <QSignalMapper>
 #include <QSocketNotifier>
 #include <QGridLayout>
 #include <QLabel>
+#include <QVideoFrame>
 #include "GenericCamera.h"
 #include "V4L2/v4l2-api.h"
 
@@ -104,7 +105,8 @@ private:
     CapMethod m_capMethod;
     QSignalMapper *m_sigMapper;
     QSocketNotifier *m_capNotifier;
-    QImage *m_capImage;
+    //QImage *m_capImage;
+    QVideoFrame *m_capImage;
     int m_row, m_col, m_cols;
     CtrlMap m_ctrlMap;
     WidgetMap m_widgetMap;

@@ -2,6 +2,7 @@
 #define VIDEOGLWIDGET_H
 
 #include <QObject>
+#include <QVideoFrame> // sometimes sensitive to order
 #include <QtGui/QWindow>
 #include <QtGui/QOpenGLFunctions>
 #include <QOpenGLPaintDevice>
@@ -52,7 +53,7 @@ public:
     void render();
 
 public slots:
-    void newFrame(QImage frame);
+    void newFrame(QVideoFrame frame);
 
 private:
 //    GLuint loadShader(GLenum type, const char *source);
@@ -64,7 +65,7 @@ private:
 
 //    QOpenGLShaderProgram *m_program;
     //int m_frame;
-    QImage currentFrame;
+    QVideoFrame currentFrame;
 
     int v_width, v_height;
 };

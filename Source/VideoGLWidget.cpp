@@ -35,33 +35,57 @@ void VideoGLWidget::render()
         v_height = currentFrame.height();
         glBindTexture(GL_TEXTURE_2D,m_texture);
         // allocate memory if the image size has changed (or the first time through)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, v_width,
-                     v_height, 0, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
+        if (!currentFrame.map(QAbstractVideoBuffer::ReadOnly))
+            qDebug() << "Failure to map video frame in GL widget";
+        else {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, v_width,
+                         v_height, 0, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
+            currentFrame.unmap();
+        }
     }
     else {
         glActiveTexture(m_texture);
         glBindTexture(GL_TEXTURE_2D,m_texture);
         // don't reallocate memory if the image size hasn't changed
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, v_width,
+        if (!currentFrame.map(QAbstractVideoBuffer::ReadOnly))
+            qDebug() << "Failure to map video frame in GL widget";
+        else {
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, v_width,
                      v_height, GL_RGB, GL_UNSIGNED_BYTE, currentFrame.bits());
+            currentFrame.unmap();
+        }
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glColor3f(1,1,1);
 
     glBindTexture(GL_TEXTURE_2D, m_texture);
+    glBegin(GL_TRIANGLES); // thanks stack overflow!
+       // first triangle, bottom left half
+       glTexCoord2f(0, 1); glVertex3f( -1,  -1, -1 );
+       glTexCoord2f(1, 1); glVertex3f(  1,  -1, -1 );
+       glTexCoord2f(0, 0); glVertex3f( -1,  1, -1 );
+
+       // second triangle, top right half
+       glTexCoord2f(1, 1); glVertex3f(  1,  -1, -1 );
+       glTexCoord2f(0, 0); glVertex3f( -1,  1, -1 );
+       glTexCoord2f(1, 0); glVertex3f(  1,  1, -1 );
+
+       glEnd();
+  /*
     glBegin(GL_QUADS);
         glTexCoord2f(0,0); glVertex3f(-1, -1, -1);
         glTexCoord2f(1,0); glVertex3f(1, -1, -1);
         glTexCoord2f(1,1); glVertex3f(1, 1, -1);
         glTexCoord2f(0,1); glVertex3f(-1, 1, -1);
     glEnd();
+    */
     glDisable(GL_TEXTURE_2D);
 
     // http://stackoverflow.com/questions/20245865/render-qimage-with-opengl
 }
 
-void VideoGLWidget::newFrame(QImage frame) {
+void VideoGLWidget::newFrame(QVideoFrame frame) {
     currentFrame = frame;
     renderLater();
 }

@@ -1,5 +1,6 @@
-#include "FakeCamera.h"
 #include <QDebug>
+#include <QVideoFrame>
+#include "FakeCamera.h"
 
 FakeVideoGenerator::FakeVideoGenerator(QObject *parent) :
     GenericCameraInterface(parent)
@@ -12,8 +13,8 @@ void FakeVideoGenerator::Initialize()
 {
     width = 640;
     height = 480;
-    //currentFrame = QVideoFrame(width * height * 3, QSize(width,height), width, QVideoFrame::Format_YUV420P);
-    currentFrame = new QImage(width, height, QImage::Format_RGB888);
+    currentFrame = new QVideoFrame(width * height * 3, QSize(width,height), width, QVideoFrame::Format_RGB24);
+    //currentFrame = new QImage(width, height, QImage::Format_RGB888);
     if (!currentFrame)
         qDebug() << "QImage not allocated";
     currentFrame_YUV = avcodec_alloc_frame();
@@ -27,7 +28,10 @@ void FakeVideoGenerator::Initialize()
     currentFrame_RGB = avcodec_alloc_frame();
     if (!currentFrame_YUV)
         qDebug() << "Could not allocate frame";
+    if (!currentFrame->map(QAbstractVideoBuffer::WriteOnly))
+        qDebug() << "Failed to map current frame";
     avpicture_fill((AVPicture*)currentFrame_RGB, currentFrame->bits(), PIX_FMT_RGB24, width, height);
+    currentFrame->unmap();
 
     frameIdx = 0;
 
@@ -60,10 +64,15 @@ void FakeVideoGenerator::GenerateNextFrame(void) {
     }
 
   //  qDebug() << "Doing color conversion";
+    if (!currentFrame->map(QAbstractVideoBuffer::WriteOnly))
+        qDebug() << "Failed to map current frame";
     sws_scale(sws_ctx, currentFrame_YUV->data, currentFrame_YUV->linesize, 0, height,
               currentFrame_RGB->data, currentFrame_RGB->linesize);
 
+    // should add a timestamp here?
+
     emit newFrame(*currentFrame);
+    currentFrame->unmap();
     frameIdx++;
 }
 

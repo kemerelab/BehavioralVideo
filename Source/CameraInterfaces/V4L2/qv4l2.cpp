@@ -42,6 +42,7 @@
 #include <QWhatsThis>
 #include <QThread>
 #include <QCloseEvent>
+#include <QDebug>
 
 #include <assert.h>
 #include <sys/mman.h>
@@ -96,13 +97,20 @@ void SupportedCamera::capFrame()
 			return;
 		}
 
-        if (m_mustConvert)
-			err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
-				m_frameData, s,
-				m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
-		if (!m_mustConvert || err < 0)
-            memcpy(m_capImage->bits(), m_frameData, std::min(s, m_capImage->byteCount()));
-		break;
+        if (!m_capImage->map(QAbstractVideoBuffer::WriteOnly)) {
+            qDebug() << "Failure to map frame in capture (read).";
+        }
+        else {
+            if (m_mustConvert)
+                err = v4lconvert_convert(m_convertData, &m_capSrcFormat, &m_capDestFormat,
+                                         m_frameData, s,
+                                         m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+            if (!m_mustConvert || err < 0)
+                memcpy(m_capImage->bits(), m_frameData, std::min(s, m_capImage->mappedBytes()));
+
+            m_capImage->unmap();
+        }
+        break;
 
 	case methodMmap:
 		if (!dqbuf_mmap(buf, buftype, again)) {
@@ -112,16 +120,22 @@ void SupportedCamera::capFrame()
 		if (again)
 			return;
 
-        if (m_mustConvert)
-            err = v4lconvert_convert(m_convertData,
-                                     &m_capSrcFormat, &m_capDestFormat,
-                                     (unsigned char *)m_buffers[buf.index].start, buf.bytesused,
-                    m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
-        if (!m_mustConvert || err < 0)
-            memcpy(m_capImage->bits(),
-                   (unsigned char *)m_buffers[buf.index].start,
-                    std::min(buf.bytesused, (unsigned)m_capImage->byteCount()));
-        qbuf(buf);
+        if (!m_capImage->map(QAbstractVideoBuffer::WriteOnly)) {
+            qDebug() << "Failure to map frame in capture (mmap).";
+        }
+        else {
+            if (m_mustConvert)
+                err = v4lconvert_convert(m_convertData,
+                                         &m_capSrcFormat, &m_capDestFormat,
+                                         (unsigned char *)m_buffers[buf.index].start, buf.bytesused,
+                        m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+            if (!m_mustConvert || err < 0)
+                memcpy(m_capImage->bits(),
+                       (unsigned char *)m_buffers[buf.index].start,
+                        std::min(buf.bytesused, (unsigned)m_capImage->mappedBytes()));
+            m_capImage->unmap();
+            qbuf(buf);
+        }
 		break;
 
 	case methodUser:
@@ -132,39 +146,32 @@ void SupportedCamera::capFrame()
 		if (again)
 			return;
 
-        if (m_mustConvert)
-            err = v4lconvert_convert(m_convertData,
-                                     &m_capSrcFormat, &m_capDestFormat,
-                                     (unsigned char *)buf.m.userptr, buf.bytesused,
-                                     m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
-        if (!m_mustConvert || err < 0)
-            memcpy(m_capImage->bits(), (unsigned char *)buf.m.userptr,
-                   std::min(buf.bytesused, (unsigned)m_capImage->byteCount()));
+        if (!m_capImage->map(QAbstractVideoBuffer::WriteOnly)) {
+            qDebug() << "Failure to map frame in capture (user).";
+        }
+        else {
+            if (m_mustConvert)
+                err = v4lconvert_convert(m_convertData,
+                                         &m_capSrcFormat, &m_capDestFormat,
+                                         (unsigned char *)buf.m.userptr, buf.bytesused,
+                                         m_capImage->bits(), m_capDestFormat.fmt.pix.sizeimage);
+            if (!m_mustConvert || err < 0)
+                memcpy(m_capImage->bits(), (unsigned char *)buf.m.userptr,
+                       std::min(buf.bytesused, (unsigned)m_capImage->mappedBytes()));
 
-        qbuf(buf);
+            m_capImage->unmap();
+            qbuf(buf);
+        }
 		break;
 	}
-	if (err == -1 && m_frame == 0)
+    if (err == -1 && m_frame++ == 0)
 		error(v4lconvert_get_error_message(m_convertData));
 
-	QString status, curStatus;
-	struct timeval tv, res;
+    if (m_frame == 1)
+        refresh();
 
-	if (m_frame == 0)
-		gettimeofday(&m_tv, NULL);
-	gettimeofday(&tv, NULL);
-	timersub(&tv, &m_tv, &res);
-	if (res.tv_sec) {
-		m_fps = (100 * (m_frame - m_lastFrame)) /
-			(res.tv_sec * 100 + res.tv_usec / 10000);
-		m_lastFrame = m_frame;
-		m_tv = tv;
-	}
-	status = QString("Frame: %1 Fps: %2").arg(++m_frame).arg(m_fps);
     emit newFrame(*m_capImage);
 
-	if (m_frame == 1)
-		refresh();
 }
 
 bool SupportedCamera::initiateCapture(unsigned buffer_size)
@@ -322,24 +329,6 @@ void SupportedCamera::haltCapture()
 
 void SupportedCamera::capStart(bool start)
 {
-	static const struct {
-		__u32 v4l2_pixfmt;
-		QImage::Format qt_pixfmt;
-	} supported_fmts[] = {
-#if Q_BYTE_ORDER == Q_BIG_ENDIAN
-		{ V4L2_PIX_FMT_RGB32, QImage::Format_RGB32 },
-		{ V4L2_PIX_FMT_RGB24, QImage::Format_RGB888 },
-		{ V4L2_PIX_FMT_RGB565X, QImage::Format_RGB16 },
-		{ V4L2_PIX_FMT_RGB555X, QImage::Format_RGB555 },
-#else
-		{ V4L2_PIX_FMT_BGR32, QImage::Format_RGB32 },
-		{ V4L2_PIX_FMT_RGB24, QImage::Format_RGB888 },
-		{ V4L2_PIX_FMT_RGB565, QImage::Format_RGB16 },
-		{ V4L2_PIX_FMT_RGB555, QImage::Format_RGB555 },
-		{ V4L2_PIX_FMT_RGB444, QImage::Format_RGB444 },
-#endif
-		{ 0, QImage::Format_Invalid }
-	};
 	QImage::Format dstFmt = QImage::Format_RGB888;
 	struct v4l2_fract interval;
 	v4l2_pix_format &srcPix = m_capSrcFormat.fmt.pix;
@@ -366,14 +355,9 @@ void SupportedCamera::capStart(bool start)
     m_capDestFormat = m_capSrcFormat;
     dstPix.pixelformat = V4L2_PIX_FMT_RGB24;
 
-    for (int i = 0; supported_fmts[i].v4l2_pixfmt; i++) {
-        if (supported_fmts[i].v4l2_pixfmt == srcPix.pixelformat) {
-            dstPix.pixelformat = supported_fmts[i].v4l2_pixfmt;
-            dstFmt = supported_fmts[i].qt_pixfmt;
-            m_mustConvert = false;
-            break;
-        }
-    }
+    if (srcPix.pixelformat == V4L2_PIX_FMT_RGB24)
+        m_mustConvert = false;
+
     if (m_mustConvert) {
         v4l2_format copy = m_capSrcFormat;
 
@@ -382,8 +366,9 @@ void SupportedCamera::capStart(bool start)
         // that there is a better format available. Restore our selected source
         // format since we do not want that happening.
         m_capSrcFormat = copy;
-		m_capImage = new QImage(dstPix.width, dstPix.height, dstFmt);
-		m_capImage->fill(0);
+        m_capImage = new QVideoFrame(dstPix.sizeimage, QSize(dstPix.width,dstPix.height),
+                                     dstPix.bytesperline, QVideoFrame::Format_RGB24);
+        //m_capImage->fill(0);
     }
 
     if (initiateCapture(srcPix.sizeimage)) {

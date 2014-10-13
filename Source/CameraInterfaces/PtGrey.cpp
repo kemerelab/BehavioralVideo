@@ -148,7 +148,10 @@ void PtGreyInterface::Initialize()
             qCritical() << "Unspported video mode set.";
         }
 
-        currentFrame = new QImage(width, height, QImage::Format_RGB888);
+        //currentFrame = new QImage(width, height, QImage::Format_RGB888);
+        QImage FrameBits = QImage(width, height, QImage::Format_RGB888);
+        currentFrame = new QVideoFrame(FrameBits);
+
         if (!currentFrame)
             qCritical() << "QImage not allocated";
 

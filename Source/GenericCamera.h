@@ -4,6 +4,7 @@
 #include <QObject>
 #include "FFMPEG.h"
 #include <QImage>
+#include <QVideoFrame>
 #include "VideoWriter.h"
 
 class GenericCameraInterface : public QObject
@@ -14,7 +15,7 @@ public:
      ~GenericCameraInterface(void);
 
 signals:
-    void newFrame(QImage frame);
+    void newFrame(QVideoFrame frame);
     void capturingStarted(void);
     void capturingEnded(void);
 
@@ -28,13 +29,14 @@ public slots:
     void StopAndRestartCaptureAsync(void)  { StopCapture(); StartCapture(false); };
 
 public:
-    int width, height;
-    QImage *currentFrame;
-
     QString cameraName;
+
+protected:
+    int width, height;
+    QVideoFrame *currentFrame;
+
     bool isCapturing;
     bool isInitialized;
-
 };
 
 Q_DECLARE_METATYPE(GenericCameraInterface*)

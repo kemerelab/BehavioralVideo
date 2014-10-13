@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QTabWidget>
 #include <QComboBox>
+#include <QElapsedTimer>
+#include <QVideoFrame> // sensitive to being before FFMPEG
 #include "FFMPEG.h"
 
 class VideoWriter : public QObject
@@ -15,21 +17,15 @@ public:
     explicit VideoWriter(QObject *parent = 0);
     void addPreferencesPanel(QTabWidget *preferencesTabs);
 
-signals:
-    void videoInitialized(void);
-    void writingStarted(void);
-    void writingEnded(void);
-
 public slots:
     void initialize(QString);
-    void newFrame(QImage image);
+    void newFrame(QVideoFrame image);
     void beginWriting(void);
     void endWriting(void);
 
 private:
     int width, height;
-    int frameRateNumerator, frameRateDenominator;
-    QImage *currentFrame;
+    AVRational timeBase;
 
     QFile *vFile;
     QString *vFilename;
@@ -53,6 +49,10 @@ private:
     QString videoExt = ".mp4";
     QWidget *prefWidget;
     QComboBox *videoEncoder;
+
+    uint64_t frameCounter = 0;
+
+    QElapsedTimer *frameTimer;
 };
 
 Q_DECLARE_METATYPE(VideoWriter*)

@@ -10,11 +10,10 @@ VideoWriter::VideoWriter(QObject *parent) :
 {
     width = -1;
     height = -1;
-    frameRateNumerator = 1;
-    frameRateDenominator = 30; // should probably not hardcode, but easier for now
-    currentFrame = NULL;
+    timeBase = (AVRational){1,30};
     waitingToInitialize = false;
     currentlyWriting = false;
+    frameTimer = NULL;
 }
 
 void VideoWriter::addPreferencesPanel(QTabWidget *preferencesTabs)
@@ -32,6 +31,12 @@ void VideoWriter::addPreferencesPanel(QTabWidget *preferencesTabs)
     layout->addRow("Default File Extension", defaultExtension);
     layout->addRow("Video Encoder", videoEncoder);
     preferencesTabs->addTab(prefWidget,"Video Writer");
+
+    // safe now because we've moved to our own thread.
+    if (!frameTimer)
+        frameTimer = new QElapsedTimer();
+
+
 }
 
 void VideoWriter::initialize(QString filename)
@@ -80,26 +85,24 @@ void VideoWriter::initialize(QString filename)
         c->width = width;
         c->height = height; // resolution must be a multiple of two
         c->pix_fmt = PIX_FMT_YUV420P;
-        c->time_base = (AVRational){frameRateNumerator, frameRateDenominator}; // frames per second
+        c->time_base = timeBase; // frames per second
 
         // Stuff to try to force high quality encoding
-        //c->gop_size = 1; /* emit one intra frame every n frames at most */
-        //c->bit_rate = 6000000;
-        c->qmax = 6; // low is better, so frame-by-frame force high quality
-        /* just for testing, we also get rid of B frames */
-        if (c->codec_id == CODEC_ID_MPEG2VIDEO) {
-            c->max_b_frames = 0;
+        if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+            c->qmax = 1; // low is better, so frame-by-frame force high quality
+            /* just for testing, we also get rid of B frames */
+            //c->max_b_frames = 0;
+            //c->gop_size = 1; /* emit one intra frame every n frames at most */
+            //c->bit_rate = 6000000;
+        }
+        else if (c->codec_id == AV_CODEC_ID_H264) {
+            av_opt_set(c->priv_data, "preset", "ultrafast",0);
+            //c->qmax = 18;
+            //c->qmin = 18;
         }
         // some formats want stream headers to be seperate
         if (oc->oformat->flags & AVFMT_GLOBALHEADER)
             c->flags |= CODEC_FLAG_GLOBAL_HEADER;
-
-        /* set the output parameters (must be done even if no
-           parameters). */
-        /*if (av_set_parameters(oc, NULL) < 0) {
-            qDebug() << "Error setting parameters";
-
-        }*/
 
         //av_dump_format(oc, 0, vFilename->toLocal8Bit().data(), 1);
 
@@ -153,28 +156,33 @@ void VideoWriter::initialize(QString filename)
         qDebug() << "Video Initialized emitted";
 
         // Should check here for errors above
-        emit videoInitialized();
     }
 
 
 }
 
-void VideoWriter::newFrame(QImage image)
+void VideoWriter::newFrame(QVideoFrame frame)
 {
-    if ((image.width() != width) || (image.height() != height)) {
-        width = image.width();
-        height = image.height();
+    if ((frame.width() != width) || (frame.height() != height)) {
+        width = frame.width();
+        height = frame.height();
     }
-    if (waitingToInitialize)
+    if (waitingToInitialize) {
         initialize(*vFilename);
+    }
     if (currentlyWriting) {
-        currentFrame = &image;
+        if (!frame.map(QAbstractVideoBuffer::ReadOnly)) {
+            qDebug() << "Failure to map video frame in writer";
+            return;
+        }
 
         AVCodecContext *c = video_st->codec;
-        avpicture_fill((AVPicture *)tmp_picture, currentFrame->bits(),
+        avpicture_fill((AVPicture *)tmp_picture, frame.bits(),
                        PIX_FMT_RGB24, c->width, c->height);
         sws_scale(sws_ctx, tmp_picture->data, tmp_picture->linesize,
                   0, c->height, picture->data, picture->linesize);
+        picture->pts = frameCounter++;
+        frame.unmap();
 
         /* encode the image */
         /* if zero size, it means the image was buffered */
@@ -184,7 +192,6 @@ void VideoWriter::newFrame(QImage image)
         if (out_size > 0) {
             AVPacket pkt;
             av_init_packet(&pkt);
-
             if (c->coded_frame->pts != AV_NOPTS_VALUE)
                 pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, video_st->time_base);
             if(c->coded_frame->key_frame)
@@ -207,7 +214,7 @@ void VideoWriter::beginWriting()
 {
     qDebug() << "begin writing";
     currentlyWriting = true;
-    emit writingStarted();
+    frameCounter = 0;
 }
 
 void VideoWriter::endWriting()
@@ -215,6 +222,21 @@ void VideoWriter::endWriting()
     qDebug() << "End writing";
     if (currentlyWriting) {
         currentlyWriting = false;
+        int out_size;
+        while ((out_size = avcodec_encode_video(video_st->codec, video_outbuf, video_outbuf_size, NULL)) > 0) {
+            AVPacket pkt;
+            av_init_packet(&pkt);
+            if (video_st->codec->coded_frame->pts != AV_NOPTS_VALUE)
+                pkt.pts= av_rescale_q(video_st->codec->coded_frame->pts,
+                                      video_st->codec->time_base, video_st->time_base);
+            if(video_st->codec->coded_frame->key_frame)
+                pkt.flags |= AV_PKT_FLAG_KEY;
+            pkt.stream_index= video_st->index;
+            pkt.data= video_outbuf;
+            pkt.size= out_size;
+            int ret = av_write_frame(oc, &pkt);
+        }
+
         // write FFMPEG trailer
         av_write_trailer(oc);
 
@@ -237,8 +259,6 @@ void VideoWriter::endWriting()
         oc=NULL;
 
         // close(info->fdts);
-        emit writingEnded();
-        qDebug() << "Writing ended signal";
     }
 
 }

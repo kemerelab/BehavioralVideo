@@ -48,10 +48,6 @@ SupportedCamera::SupportedCamera(QString name, QTabWidget *prefTabs, QObject *pa
 
     m_mainLayout = NULL;
 
-    //connect(openRawAct, SIGNAL(triggered()), this, SLOT(openrawdev()));
-    //m_capStartAct->setDisabled(true);
-    //connect(m_capStartAct, SIGNAL(toggled(bool)), this, SLOT(capStart(bool)));
-    //connect(closeAct, SIGNAL(triggered()), this, SLOT(closeDevice()));
     setDevice(device, true);
 }
 
