@@ -91,8 +91,8 @@ void DataController::registerCamera(GenericCameraInterface *camera)
         disconnect(cameraList.at(0), SIGNAL(newFrame(QVideoFrame)), videoWidget, SLOT(newFrame(QVideoFrame)));
         disconnect(cameraList.at(0), SIGNAL(newFrame(QVideoFrame)), videoWriter, SLOT(newFrame(QVideoFrame)));
         qDebug() << "Re-registering";
-        connect(this, SIGNAL(newFrame(QVideoFrame)), videoWidget, SLOT(newFrame(QImage)));
-        connect(this, SIGNAL(newFrame(QVideoFrame)), videoWriter, SLOT(newFrame(QImage)));
+        connect(this, SIGNAL(newFrame(QVideoFrame)), videoWidget, SLOT(newFrame(QVideoFrame)));
+        connect(this, SIGNAL(newFrame(QVideoFrame)), videoWriter, SLOT(newFrame(QVideoFrame)));
         connect(cameraList.at(0), SIGNAL(newFrame(QVideoFrame)), this, SLOT(newLeftFrame(QVideoFrame)));
         connect(cameraList.at(1), SIGNAL(newFrame(QVideoFrame)), this, SLOT(newRightFrame(QVideoFrame)));
     }
@@ -111,48 +111,62 @@ void DataController::registerVideoWidget(VideoGLWidget *_videoWidget)
     videoWidget = _videoWidget;
 }
 
-void DataController::newLeftFrame(QImage leftFrame)
+void DataController::newLeftFrame(QVideoFrame frame)
 {
-    if (!concatenatingFrameInitialized) {
-        concatenatingFrame = new QImage(leftFrame.width()*2, leftFrame.height(), QImage::Format_RGB888);
-        concatenationPainter = new QPainter(concatenatingFrame);
-        qDebug() << "Concatenating frame initialized" << leftFrame.width() * 2 << " " << leftFrame.height();
-        concatenatingFrameInitialized = true;
-    }
-
-    if (frameConcatenationState == NOT_STARTED) {
-        concatenationPainter->drawImage(0,0,leftFrame);
-        frameConcatenationState = LEFT_READY;
-    } else if (frameConcatenationState == LEFT_READY) {
-        concatenationPainter->drawImage(0,0,leftFrame);
-        frameConcatenationState = LEFT_READY;
-        qDebug() << "Two left frames received before a right frame";
-    } else if (frameConcatenationState == RIGHT_READY) {
-        concatenationPainter->drawImage(0,0,leftFrame);
-        frameConcatenationState = NOT_STARTED;
-        emit newFrame(*concatenatingFrame);
-    }
+    concatenateFrames(left, frame);
 }
 
-void DataController::newRightFrame(QImage rightFrame)
+void DataController::newRightFrame(QVideoFrame frame)
+{
+    concatenateFrames(right, frame);
+}
+
+void DataController::concatenateFrames(DataController::WhichFrame which, QVideoFrame frame)
 {
     if (!concatenatingFrameInitialized) {
-        concatenatingFrame = new QImage(rightFrame.width()*2, rightFrame.height(), QImage::Format_RGB888);
-        concatenationPainter = new QPainter(concatenatingFrame);
-        qDebug() << "Concatenating frame initialized" << rightFrame.width() * 2 << " " << rightFrame.height();
+        int width = frame.width();
+        int height = frame.height();
+        //concatenatingImage = new QImage(width*2, height, QImage::Format_RGB888);
+        //concatenationPainter = new QPainter(concatenatingImage);
+        concatenatingFrame = new QVideoFrame(width * 2 * height * 3,
+                                             QSize(width*2,height), width*2, QVideoFrame::Format_RGB24);
+        qDebug() << "Creating a concatenating frame of size " << 2*width << " x " << height;
         concatenatingFrameInitialized = true;
     }
 
-    if (frameConcatenationState == NOT_STARTED) {
-        concatenationPainter->drawImage(rightFrame.width(),0,rightFrame);
-        frameConcatenationState = RIGHT_READY;
-    } else if (frameConcatenationState == RIGHT_READY) {
-        concatenationPainter->drawImage(rightFrame.width(),0,rightFrame);
-        frameConcatenationState = RIGHT_READY;
-        qDebug() << "Two right frames received before a left frame";
-    } else if (frameConcatenationState == LEFT_READY) {
-        concatenationPainter->drawImage(rightFrame.width(),0,rightFrame);
-        frameConcatenationState = NOT_STARTED;
-        emit newFrame(*concatenatingFrame);
+    if (!frame.map(QAbstractVideoBuffer::ReadOnly))
+        qDebug() << "Failed to map current frame";
+    else {
+        if (!concatenatingFrame->map(QAbstractVideoBuffer::WriteOnly))
+            qDebug() << "Failed to map concatenating frame";
+        else {
+            //concatenationPainter->drawImage(frame.width() * (which==right),0,frame);
+            for (int i=0; i < frame.height(); i++)
+                memcpy(concatenatingFrame->bits() + concatenatingFrame->width()*3*i
+                       + frame.width()*3*(which==right),
+                       frame.bits() + frame.width()*3*i, frame.width()*3);
+            concatenatingFrame->unmap();
+
+            if (frameConcatenationState == NOT_STARTED) {
+                frameConcatenationState = (which==left) ? LEFT_READY : RIGHT_READY;
+            } else if (frameConcatenationState == LEFT_READY) {
+                if (which == left)
+                    qDebug() << "Two left frames received before a right frame";
+                else {
+                    frameConcatenationState = NOT_STARTED;
+                    emit newFrame(*concatenatingFrame);
+                }
+            } else if (frameConcatenationState == RIGHT_READY) {
+                if (which == right)
+                    qDebug() << "Two right frames received before a right frame";
+                else {
+                    frameConcatenationState = NOT_STARTED;
+                    emit newFrame(*concatenatingFrame);
+                }
+            }
+        }
+        frame.unmap();
     }
+
+
 }

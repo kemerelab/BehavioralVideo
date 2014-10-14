@@ -143,6 +143,7 @@ MainWindow::MainWindow(QWidget *parent) :
     videoContainer->setStyleSheet("QWidget {background: light gray}");
     QWidget *container = QWidget::createWindowContainer(videoWidget,ui->centralWidget);
     QToolBar *toolBar = new QToolBar(videoContainer);
+    toolBar->addAction(ui->actionPreferences);
     toolBar->addAction(ui->actionOpenVideoFile);
     toolBar->addAction(ui->actionRecord);
     toolBar->addAction(ui->actionStop);

@@ -175,8 +175,14 @@ void PtGreyInterface::ChangeTriggerPin(int pin){
 
 void PtGreyInterface::FrameReceived(FlyCapture2::Image img)
 {
-    memcpy(currentFrame->bits(), img.GetData(), img.GetDataSize());
-    emit newFrame(*currentFrame);
+    if (!currentFrame->map(QAbstractVideoBuffer::WriteOnly))
+        qDebug() << "Failed to map current frame";
+    else {
+        memcpy(currentFrame->bits(), img.GetData(), img.GetDataSize());
+        currentFrame->unmap();
+
+        emit newFrame(*currentFrame);
+    }
 }
 
 void PtGreyInterface::StartCapture(bool enableTrigger)

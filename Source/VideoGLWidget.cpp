@@ -2,7 +2,7 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLPaintDevice>
+//#include <QtGui/QOpenGLPaintDevice>
 #include <QtGui/QPainter>
 
 #include <QDebug>

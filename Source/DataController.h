@@ -1,6 +1,7 @@
 #ifndef DATA_CONTROLLER_H
 #define DATA_CONTROLLER_H
 
+#include <QVideoFrame>
 #include "GenericCamera.h"
 #include "GenericCameraController.h"
 #include "VideoWriter.h"
@@ -31,7 +32,7 @@ public:
 
 signals:
     void updateSavingMenus(SavingState);
-    void newFrame(QImage);
+    void newFrame(QVideoFrame);
 
 public slots:
     void stopVideo(void);
@@ -44,8 +45,8 @@ public slots:
     void registerCamera(GenericCameraInterface *camera);
     void registerCameraController(GenericCameraController *controller);
     void registerVideoWidget(VideoGLWidget *videoWidget);
-    void newLeftFrame(QImage);
-    void newRightFrame(QImage);
+    void newLeftFrame(QVideoFrame);
+    void newRightFrame(QVideoFrame);
 
 private:
     QList<GenericCameraInterface *> cameraList;
@@ -55,7 +56,8 @@ private:
     int numCameras;
     TriggerType triggerType;
     bool videoIsStreaming;
-    QImage *concatenatingFrame;
+    QVideoFrame *concatenatingFrame;
+    QImage *concatenatingImage;
     bool concatenatingFrameInitialized;
     QPainter *concatenationPainter;
     enum FrameConcatenationState {
@@ -65,6 +67,11 @@ private:
     };
     FrameConcatenationState frameConcatenationState;
 
+    enum WhichFrame {
+        left, right
+    };
+
+    void concatenateFrames(WhichFrame which, QVideoFrame frame);
 };
 
 Q_DECLARE_METATYPE(DataController*)
