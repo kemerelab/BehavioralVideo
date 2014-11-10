@@ -15,6 +15,7 @@ enum CommandEnum
   kClearWellLog,     // Command to clear well counters
   kSetFramePeriod,   // Command to set camera triggering frame rate (argument: period in microseconds)
   kSetTriggerPin,    // Command to set camera trigger pin (argument: pin number)
+  kSetLoggingPin,    // Command to set pin to mirror camera trigger during logging (argument: pin number)
   kEnableTrigger,    // Command to start/stop triggering (argument: true=on, false=off)
   kEnableTriggerLogging, // Command to enable trigger *logging*
   kSetEventPin,      // Command to set IO event pin (argument: pin number)

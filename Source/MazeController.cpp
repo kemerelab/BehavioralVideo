@@ -129,8 +129,8 @@ void MazeController::changeCameraTriggerPin(int)
 void MazeController::setPins(QList<int> pinList)
 {
     int n = pinList.length();
-    if (n % 2 == 0) {
-        qDebug() << "Even number of pins received when odd expected";
+    if (n != numberOfWells*2 + 2) {
+        qDebug() << "Unexpected number of pins in list";
     }
     else {
         beamBreakPins.clear();
@@ -141,6 +141,7 @@ void MazeController::setPins(QList<int> pinList)
             pumpPins.append(pinList[i+1]);
         }
         cameraPin = pinList[n-1];
+        cameraLoggingPin = pinList[n-1];
     }
 }
 
@@ -285,13 +286,9 @@ void MazeControllerSerialPort::processSerialData()
                         for (int j = 1; j < parsedCommand.length(); j++) {
                             pins.append(parsedCommand.at(j).toInt());
                         }
+                        emit numberOfWells(pins.at(0));
+                        pins.removeFirst(); // this gets rid of the well count
                         emit currentPins(pins);
-                        if (pins.length() % 2 == 1) { // odd
-                            emit numberOfWells( pins.length()/2 );
-                        }
-                        else {
-                            qDebug() << "Unexpected well query command response (even #).";
-                        }
                         break;
                     case (kQueryWellLog):
                         wellLog.clear();

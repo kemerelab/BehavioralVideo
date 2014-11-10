@@ -12,9 +12,11 @@
 
 #ifdef TESTING
 #define TRIGGER_PIN 13 // LED pin
+#define LOGGING_PIN 12 
 #define DEFAULT_FRAMERATE 250000
 #else
 #define TRIGGER_PIN A1 
+#define LOGGING_PIN A2 
 #define DEFAULT_FRAMERATE 16666 // 30 FPS
 #endif
 
@@ -75,8 +77,11 @@ void OnVersion();
 // Callback function that sets camera frame period
 void OnSetFramePeriod();
 
-// Callback function that sets camera frame period
+// Callback function that sets camera frame trigger pin
 void OnSetTriggerPin();
+
+// Callback function that sets pin which mirrors camera frame trigger when logging
+void OnSetLoggingPin();
 
 // Callback function that starts or stops camera triggering
 void OnEnableTrigger();

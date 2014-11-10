@@ -74,6 +74,7 @@ public:
     QList<int> beamBreakPins;
     QList<int> pumpPins;
     int cameraPin;
+    int cameraLoggingPin;
     QMutex mutex;
     QWaitCondition condition;
 

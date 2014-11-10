@@ -46,7 +46,8 @@ unsigned long int dispenseTime = 0; // will be the time dispensing should end
 
 // Camera trigger state used by timer interrupt
 int triggerState = LOW;
-volatile int triggerPin = TRIGGER_PIN;  // the pin with a LED was 13
+volatile int triggerPin = TRIGGER_PIN;  // set in header
+volatile int loggingPin = LOGGING_PIN;  // set in header
 volatile unsigned long int triggerCounter = 0;
 volatile unsigned long int lastTriggerTime = 0;
 unsigned long int trackingTriggerCounter = 0;
@@ -65,6 +66,7 @@ void attachCommandCallbacks()
   cmdMessenger.attach(OnUnknownCommand);
   cmdMessenger.attach(kSetFramePeriod, OnSetFramePeriod);
   cmdMessenger.attach(kSetTriggerPin, OnSetTriggerPin);
+  cmdMessenger.attach(kSetLoggingPin, OnSetLoggingPin);
   cmdMessenger.attach(kEnableTrigger, OnEnableTrigger); // equivalent of start and stop
   cmdMessenger.attach(kEnableTriggerLogging, OnEnableTriggerLogging);
   cmdMessenger.attach(kFakeBeamBreak, OnFakeBeamBreak);  
@@ -101,13 +103,22 @@ void OnSetFramePeriod()
   cmdMessenger.sendCmdEnd();
 }
 
-// Callback function that sets camera frame period
+// Callback function that sets camera frame trigger pin
 void OnSetTriggerPin()
 {
   unsigned int pin;
   // Read period argument, interpret string as unsigned long int (Int32)
   pin = cmdMessenger.readInt16Arg();
   triggerPin = pin;
+}
+
+// Callback function that sets pin which will mirror camera frame trigger when logging
+void OnSetLoggingPin()
+{
+  unsigned int pin;
+  // Read period argument, interpret string as unsigned long int (Int32)
+  pin = cmdMessenger.readInt16Arg();
+  loggingPin = pin;
 }
 
 // Callback function that starts or stops camera triggering
@@ -120,6 +131,8 @@ void OnEnableTrigger()
     Timer1.stop();
     triggerState = LOW;
     digitalWrite(triggerPin, triggerState);
+    if (logCameraTriggers)
+      digitalWrite(loggingPin, triggerState);
   }
   else {
     Timer1.restart();
@@ -175,11 +188,13 @@ void OnQueryPins()
 {
   int i;
   cmdMessenger.sendCmdStart(kQueryPins);
+  cmdMessenger.sendCmdArg((int) nFoodWells); // send number of wells before well info
   for (i = 0; i < nFoodWells; i++) {
     cmdMessenger.sendCmdArg((int) beamBreakPins[i]);  
     cmdMessenger.sendCmdArg((int) pumpPins[i]);  
   }
   cmdMessenger.sendCmdArg((int) triggerPin);
+  cmdMessenger.sendCmdArg((int) loggingPin);
   cmdMessenger.sendCmdEnd();
 }
 
@@ -269,6 +284,8 @@ void triggerCamera(void)
     triggerState = LOW;
   }
   digitalWrite(triggerPin, triggerState);
+  if (logCameraTriggers)
+    digitalWrite(loggingPin, triggerState);
 }
 
 void CommonMazeSetup(void)
@@ -283,6 +300,7 @@ void CommonMazeSetup(void)
   }
   
   pinMode(triggerPin, OUTPUT);
+  pinMode(loggingPin, OUTPUT);
 
   Timer1.initialize(DEFAULT_FRAMERATE); 
   Timer1.attachInterrupt(triggerCamera); // triggerCamera to run every 0.15 seconds
